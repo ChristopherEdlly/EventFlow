@@ -1,0 +1,23 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+build
+*.min.js
+*.min.css
+
+# Cache
+.cache
+.parcel-cache
+.vite
+
+# IDE
+.vscode
+.idea
+
+# Misc
+coverage
+*.log
+package-lock.json
+.git
