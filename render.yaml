@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: eventflow
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: SQLITE_DATABASE_URL
+        value: file:./dev.db

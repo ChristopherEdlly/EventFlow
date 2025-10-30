@@ -5,6 +5,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import PublicEventsPage from './pages/PublicEventsPage';
 import MyInvitesPage from './pages/MyInvitesPage';
+import EventDetailsPage from './pages/EventDetailsPage';
 
 type Page = 'login' | 'register' | 'dashboard' | 'publicEvents' | 'myInvites' | 'eventDetails';
 
@@ -62,6 +63,12 @@ function App() {
       )}
       {page === 'myInvites' && (
         <MyInvitesPage
+          onBack={() => setPage('dashboard')}
+        />
+      )}
+      {page === 'eventDetails' && selectedEventId && (
+        <EventDetailsPage
+          eventId={selectedEventId}
           onBack={() => setPage('dashboard')}
         />
       )}

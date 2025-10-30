@@ -45,7 +45,7 @@ model Guest {
   id        String   @id @default(uuid())
   name      String
   email     String
-  status    String   // YES, NO, MAYBE, WAITLISTED
+  status    String   // PENDING, YES, NO, MAYBE, WAITLISTED
   eventId   String
   event     Event    @relation(fields: [eventId], references: [id])
   userId    String?
