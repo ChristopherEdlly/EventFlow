@@ -21,9 +21,8 @@ export default function PublicEventsPage({ onBack, onViewEvent }: PublicEventsPa
     try {
       setIsLoading(true);
       const data = await eventsService.getEvents();
-      // Filter only PUBLIC events
-      const publicEvents = data.filter(event => event.visibility === 'PUBLIC' && event.state === 'PUBLISHED');
-      setEvents(publicEvents);
+      // Backend already filters PUBLIC events, no need to filter again
+      setEvents(data);
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Failed to load events');
