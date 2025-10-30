@@ -1,0 +1,12 @@
+# See root .gitignore for common rules
+# Frontend-specific ignores (kept minimal)
+
+# Vite cache
+.vite/
+
+# Frontend build output (root also ignores these)
+dist/
+build/
+
+# If you need frontend-only exceptions, add them below
+
