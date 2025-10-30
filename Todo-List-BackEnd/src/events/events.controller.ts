@@ -56,12 +56,13 @@ export class EventsController {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getAllEvents(@Req() req: any) {
     const uid = req.user?.userId;
+    // Return PUBLIC events that are DRAFT or PUBLISHED (not CANCELLED/ARCHIVED)
     const events = await this.prisma.event.findMany({
       where: {
-        OR: [
-          { visibility: 'PUBLIC' },
-          { ownerId: uid },
-        ],
+        visibility: 'PUBLIC',
+        state: {
+          in: ['DRAFT', 'PUBLISHED'],
+        },
       },
       include: {
         _count: {
@@ -71,6 +72,67 @@ export class EventsController {
       orderBy: { date: 'asc' },
     });
     return events;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('my-events')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getMyEvents(@Req() req: any) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    const events = await this.prisma.event.findMany({
+      where: {
+        ownerId: uid,
+      },
+      include: {
+        _count: {
+          select: { guests: true },
+        },
+      },
+      orderBy: { date: 'asc' },
+    });
+    return events;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('my-invites')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getMyInvites(@Req() req: any) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Get user email to find their invites
+    const user = await this.prisma.user.findUnique({
+      where: { id: uid },
+      select: { email: true },
+    });
+
+    if (!user) throw new UnauthorizedException('Usuário não encontrado');
+
+    // Find all events where user is a guest
+    const guests = await this.prisma.guest.findMany({
+      where: {
+        email: user.email,
+      },
+      include: {
+        event: {
+          include: {
+            _count: {
+              select: { guests: true },
+            },
+          },
+        },
+      },
+      orderBy: { event: { date: 'asc' } },
+    });
+
+    // Return events with guest status
+    return guests.map(guest => ({
+      ...guest.event,
+      myGuestStatus: guest.status,
+      myGuestId: guest.id,
+    }));
   }
 
   @UseGuards(JwtAuthGuard)
@@ -246,5 +308,104 @@ export class EventsController {
     } catch {
       throw new NotFoundException('Not found');
     }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/guests')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async addGuests(@Param('id') id: string, @Body() body: any, @Req() req: any) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      select: { ownerId: true },
+    });
+
+    if (!event) throw new NotFoundException('Evento não encontrado');
+    if (event.ownerId !== uid) throw new ForbiddenException('Apenas o criador pode adicionar convidados');
+
+    const emails = body.emails;
+    if (!Array.isArray(emails) || emails.length === 0) {
+      throw new BadRequestException('Lista de emails inválida');
+    }
+
+    // Validate emails
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    for (const email of emails) {
+      if (!emailRegex.test(email)) {
+        throw new BadRequestException(`Email inválido: ${email}`);
+      }
+    }
+
+    // Create guests
+    const guests = [];
+    for (const email of emails) {
+      // Check if guest already exists
+      const existing = await this.prisma.guest.findFirst({
+        where: { eventId: id, email },
+      });
+
+      if (!existing) {
+        const guest = await this.prisma.guest.create({
+          data: {
+            email,
+            name: email.split('@')[0], // Use email prefix as default name
+            status: 'PENDING',
+            eventId: id,
+          },
+        });
+        guests.push(guest);
+      }
+    }
+
+    return {
+      message: `${guests.length} convidados adicionados`,
+      guests,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':eventId/guests/:guestId')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async updateGuestStatus(
+    @Param('eventId') eventId: string,
+    @Param('guestId') guestId: string,
+    @Body() body: any,
+    @Req() req: any,
+  ) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Get user email
+    const user = await this.prisma.user.findUnique({
+      where: { id: uid },
+      select: { email: true },
+    });
+
+    if (!user) throw new UnauthorizedException('Usuário não encontrado');
+
+    // Find guest
+    const guest = await this.prisma.guest.findUnique({
+      where: { id: guestId },
+      include: { event: true },
+    });
+
+    if (!guest) throw new NotFoundException('Convite não encontrado');
+    if (guest.eventId !== eventId) throw new BadRequestException('Convite não pertence a este evento');
+    if (guest.email !== user.email) throw new ForbiddenException('Você não pode atualizar o status de outro convidado');
+
+    const { status } = body;
+    if (!['YES', 'NO', 'MAYBE'].includes(status)) {
+      throw new BadRequestException('Status inválido. Use: YES, NO ou MAYBE');
+    }
+
+    // Update guest status
+    const updated = await this.prisma.guest.update({
+      where: { id: guestId },
+      data: { status },
+    });
+
+    return updated;
   }
 }

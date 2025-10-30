@@ -7,7 +7,7 @@ interface MyInvitesPageProps {
 }
 
 export default function MyInvitesPage({ onBack }: MyInvitesPageProps) {
-  const [invites, setInvites] = useState<Array<Event & { myGuest?: Guest }>>([]);
+  const [invites, setInvites] = useState<Array<Event & { myGuestStatus?: GuestStatus; myGuestId?: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
@@ -22,10 +22,8 @@ export default function MyInvitesPage({ onBack }: MyInvitesPageProps) {
   const loadInvites = async () => {
     try {
       setIsLoading(true);
-      const events = await eventsService.getEvents();
-      // In a real app, filter events where user is invited
-      // For now, showing all events as potential invites
-      setInvites(events);
+      const events = await eventsService.getMyInvites();
+      setInvites(events as any);
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Failed to load invites');
@@ -34,12 +32,15 @@ export default function MyInvitesPage({ onBack }: MyInvitesPageProps) {
     }
   };
 
-  const handleRespond = async (eventId: string, status: GuestStatus, reason?: string) => {
+  const handleRespond = async (eventId: string, status: GuestStatus, guestId?: string, reason?: string) => {
+    if (!guestId) {
+      setError('ID do convite não encontrado');
+      return;
+    }
+
     setRespondingTo(eventId);
     try {
-      // In real app, would update guest status
-      // For now, just simulating the response
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await eventsService.updateGuestStatus(eventId, guestId, status);
       await loadInvites();
       if (status === 'NO') {
         setShowDeclineModal(false);
@@ -53,14 +54,17 @@ export default function MyInvitesPage({ onBack }: MyInvitesPageProps) {
     }
   };
 
-  const openDeclineModal = (eventId: string) => {
+  const openDeclineModal = (eventId: string, guestId: string) => {
     setSelectedEventId(eventId);
+    setSelectedGuestId(guestId);
     setShowDeclineModal(true);
   };
 
+  const [selectedGuestId, setSelectedGuestId] = useState<string | null>(null);
+
   const handleDecline = () => {
-    if (selectedEventId) {
-      handleRespond(selectedEventId, 'NO', declineReason);
+    if (selectedEventId && selectedGuestId) {
+      handleRespond(selectedEventId, 'NO', selectedGuestId, declineReason);
     }
   };
 
@@ -154,8 +158,8 @@ export default function MyInvitesPage({ onBack }: MyInvitesPageProps) {
                       <h3 className="text-lg font-semibold text-neutral-900">
                         {event.title}
                       </h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(event.myGuest?.status)}`}>
-                        {getStatusLabel(event.myGuest?.status)}
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(event.myGuestStatus)}`}>
+                        {getStatusLabel(event.myGuestStatus)}
                       </span>
                     </div>
 
@@ -186,10 +190,10 @@ export default function MyInvitesPage({ onBack }: MyInvitesPageProps) {
                     </div>
                   </div>
 
-                  {!event.myGuest?.status && (
+                  {(!event.myGuestStatus || event.myGuestStatus === 'PENDING') && event.myGuestId && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleRespond(event.id, 'YES')}
+                        onClick={() => handleRespond(event.id, 'YES', event.myGuestId)}
                         disabled={respondingTo === event.id}
                         className="px-4 py-2 bg-success-600 hover:bg-success-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
                       >
@@ -200,7 +204,7 @@ export default function MyInvitesPage({ onBack }: MyInvitesPageProps) {
                       </button>
 
                       <button
-                        onClick={() => handleRespond(event.id, 'MAYBE')}
+                        onClick={() => handleRespond(event.id, 'MAYBE', event.myGuestId)}
                         disabled={respondingTo === event.id}
                         className="px-4 py-2 bg-warning-600 hover:bg-warning-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
                       >
@@ -208,7 +212,7 @@ export default function MyInvitesPage({ onBack }: MyInvitesPageProps) {
                       </button>
 
                       <button
-                        onClick={() => openDeclineModal(event.id)}
+                        onClick={() => event.myGuestId && openDeclineModal(event.id, event.myGuestId)}
                         disabled={respondingTo === event.id}
                         className="px-4 py-2 bg-error-600 hover:bg-error-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
                       >

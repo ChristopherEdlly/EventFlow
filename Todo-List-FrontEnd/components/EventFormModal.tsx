@@ -19,6 +19,7 @@ export default function EventFormModal({ onClose, onSuccess }: EventFormModalPro
     allowWaitlist: false,
     requireApproval: false,
   });
+  const [guestEmails, setGuestEmails] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -28,7 +29,25 @@ export default function EventFormModal({ onClose, onSuccess }: EventFormModalPro
     setIsLoading(true);
 
     try {
-      await eventsService.createEvent(formData);
+      const event = await eventsService.createEvent(formData);
+
+      // Add guests if emails were provided
+      if (guestEmails.trim()) {
+        const emails = guestEmails
+          .split(/[,\n]/)
+          .map(email => email.trim())
+          .filter(email => email.length > 0);
+
+        if (emails.length > 0) {
+          try {
+            await eventsService.addGuestsByEmail(event.id, emails);
+          } catch (err) {
+            console.error('Failed to add guests:', err);
+            // Don't fail the whole operation if guests fail
+          }
+        }
+      }
+
       onSuccess();
       onClose();
     } catch (err) {
@@ -154,6 +173,22 @@ export default function EventFormModal({ onClose, onSuccess }: EventFormModalPro
               className="w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
               placeholder="Número máximo de pessoas"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Convidar pessoas (opcional)
+            </label>
+            <textarea
+              rows={4}
+              value={guestEmails}
+              onChange={(e) => setGuestEmails(e.target.value)}
+              className="w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+              placeholder="Digite os emails separados por vírgula ou quebra de linha&#10;Ex: joao@email.com, maria@email.com"
+            />
+            <p className="text-xs text-neutral-500 mt-1">
+              Digite os emails dos convidados separados por vírgula ou quebra de linha
+            </p>
           </div>
 
           <div className="space-y-3">

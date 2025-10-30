@@ -12,7 +12,7 @@ export type EventState =
   | 'CANCELLED'
   | 'COMPLETED'
   | 'ARCHIVED';
-export type GuestStatus = 'YES' | 'NO' | 'MAYBE' | 'WAITLISTED';
+export type GuestStatus = 'YES' | 'NO' | 'MAYBE' | 'WAITLISTED' | 'PENDING';
 
 export interface Event {
   id: string;
@@ -80,6 +80,14 @@ class EventsService {
     return api.get<Event[]>('/events');
   }
 
+  async getMyEvents(): Promise<Event[]> {
+    return api.get<Event[]>('/events/my-events');
+  }
+
+  async getMyInvites(): Promise<Event[]> {
+    return api.get<Event[]>('/events/my-invites');
+  }
+
   async getEvent(id: string): Promise<Event> {
     return api.get<Event>(`/events/${id}`);
   }
@@ -102,6 +110,10 @@ class EventsService {
 
   async addGuest(eventId: string, data: AddGuestDto): Promise<Guest> {
     return api.post<Guest>(`/events/${eventId}/guests`, data);
+  }
+
+  async addGuestsByEmail(eventId: string, emails: string[]): Promise<{ message: string; guests: Guest[] }> {
+    return api.post<{ message: string; guests: Guest[] }>(`/events/${eventId}/guests`, { emails });
   }
 
   async updateGuestStatus(

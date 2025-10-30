@@ -8,9 +8,10 @@ interface DashboardPageProps {
   onLogout: () => void;
   onNavigateToPublicEvents: () => void;
   onNavigateToMyInvites: () => void;
+  onViewEvent?: (eventId: string) => void;
 }
 
-export default function DashboardPage({ onLogout, onNavigateToPublicEvents, onNavigateToMyInvites }: DashboardPageProps) {
+export default function DashboardPage({ onLogout, onNavigateToPublicEvents, onNavigateToMyInvites, onViewEvent }: DashboardPageProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -23,7 +24,7 @@ export default function DashboardPage({ onLogout, onNavigateToPublicEvents, onNa
   const loadEvents = async () => {
     try {
       setIsLoading(true);
-      const data = await eventsService.getEvents();
+      const data = await eventsService.getMyEvents();
       setEvents(data);
     } catch (err) {
       const apiError = err as ApiError;
@@ -338,7 +339,10 @@ export default function DashboardPage({ onLogout, onNavigateToPublicEvents, onNa
                     )}
                   </div>
 
-                  <button className="w-full py-2 px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-lg transition-colors">
+                  <button
+                    onClick={() => onViewEvent && onViewEvent(event.id)}
+                    className="w-full py-2 px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-lg transition-colors"
+                  >
                     Ver Detalhes
                   </button>
                 </div>

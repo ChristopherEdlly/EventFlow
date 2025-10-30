@@ -51,6 +51,7 @@ function App() {
           onLogout={handleLogout}
           onNavigateToPublicEvents={() => setPage('publicEvents')}
           onNavigateToMyInvites={() => setPage('myInvites')}
+          onViewEvent={handleViewEvent}
         />
       )}
       {page === 'publicEvents' && (
