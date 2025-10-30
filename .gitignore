@@ -1,0 +1,78 @@
+# Root .gitignore — regras consolidadas para o monorepo
+
+# Node
+node_modules/
+
+# Package manager caches
+.pnpm-store/
+.cache/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime / process files
+pids/
+*.pid
+
+# Build output
+dist/
+build/
+out/
+
+# Vite / bundlers
+.vite/
+.parcel-cache/
+
+# Next / frameworks
+.next/
+
+# TypeScript
+*.tsbuildinfo
+
+# Coverage
+coverage/
+lcov-report/
+
+# Environment
+.env
+.env.*
+.env.local
+.env.test
+.env.production
+.envrc
+
+# Prisma
+prisma/dev.db
+prisma/*.sqlite
+
+# Docker
+docker-compose.override.yml
+
+# Editor and IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+*.tgz
+*.log
+*.seed
+
+# Ignore files (no .md should be kept in the repo)
+*.md
+**/*.md
+*.bat
+**/*.bat
+*.txt
+**/*.txt
