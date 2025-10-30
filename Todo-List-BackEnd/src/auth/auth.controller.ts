@@ -1,15 +1,19 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   Res,
+  Req,
   UnauthorizedException,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -51,5 +55,22 @@ export class AuthController {
   async logout(@Res() res: Response) {
     res.clearCookie('jwt');
     res.json({ ok: true });
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getProfile(@Req() req: any) {
+    const userId = req.user?.userId;
+    if (!userId) throw new UnauthorizedException('Não autenticado');
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, createdAt: true },
+    });
+
+    if (!user) throw new UnauthorizedException('Usuário não encontrado');
+
+    return user;
   }
 }

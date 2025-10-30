@@ -139,6 +139,10 @@ class ApiClient {
   getToken(): string | null {
     return this.token;
   }
+
+  async getProfile(): Promise<{ id: string; name: string; email: string; createdAt: string }> {
+    return this.get('/auth/profile');
+  }
 }
 
 // Export singleton instance

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { eventsService, type Event, type Guest } from '../services/events';
-import type { ApiError } from '../services/api';
+import { api, type ApiError } from '../services/api';
 
 interface EventDetailsPageProps {
   eventId: string;
@@ -12,6 +12,11 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
   const [guests, setGuests] = useState<Guest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [guestEmails, setGuestEmails] = useState('');
+  const [isSendingInvites, setIsSendingInvites] = useState(false);
+  const [inviteSuccess, setInviteSuccess] = useState('');
 
   useEffect(() => {
     loadEventDetails();
@@ -20,6 +25,16 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
   const loadEventDetails = async () => {
     try {
       setIsLoading(true);
+
+      // Load user profile to check if they own the event
+      try {
+        const profile = await api.getProfile();
+        setCurrentUserId(profile.id);
+      } catch {
+        // User might not be authenticated
+        setCurrentUserId(null);
+      }
+
       const eventData = await eventsService.getEvent(eventId);
       setEvent(eventData as Event);
 
@@ -72,6 +87,54 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
         return state;
     }
   };
+
+  const handleSendInvites = async () => {
+    if (!guestEmails.trim()) {
+      setError('Por favor, insira pelo menos um email');
+      return;
+    }
+
+    setIsSendingInvites(true);
+    setError('');
+    setInviteSuccess('');
+
+    try {
+      const emails = guestEmails
+        .split(/[,\n]/)
+        .map(email => email.trim())
+        .filter(email => email.length > 0);
+
+      if (emails.length === 0) {
+        setError('Nenhum email válido encontrado');
+        return;
+      }
+
+      const result = await eventsService.addGuestsByEmail(eventId, emails);
+      setInviteSuccess(result.message);
+      setGuestEmails('');
+
+      // Reload guests list
+      try {
+        const guestsData = await eventsService.getEventGuests(eventId);
+        setGuests(guestsData);
+      } catch {
+        // User might not have permission to see guests
+      }
+
+      // Close modal after 2 seconds
+      setTimeout(() => {
+        setShowInviteModal(false);
+        setInviteSuccess('');
+      }, 2000);
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || 'Erro ao enviar convites');
+    } finally {
+      setIsSendingInvites(false);
+    }
+  };
+
+  const isOwner = event && currentUserId && event.ownerId === currentUserId;
 
   if (isLoading) {
     return (
@@ -156,6 +219,20 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
                 {getStateLabel(event.state)}
               </span>
             </div>
+
+            {isOwner && (
+              <div className="mb-6">
+                <button
+                  onClick={() => setShowInviteModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Adicionar Convidados
+                </button>
+              </div>
+            )}
 
             {event.description && (
               <p className="text-neutral-700 text-lg mb-6">{event.description}</p>
@@ -262,6 +339,64 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
           </div>
         </div>
       </main>
+
+      {/* Add Guests Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-neutral-900 mb-4">
+              Adicionar Convidados
+            </h3>
+
+            {error && (
+              <div className="mb-4 p-3 bg-error-50 border border-error-200 rounded-lg">
+                <p className="text-sm text-error-800">{error}</p>
+              </div>
+            )}
+
+            {inviteSuccess && (
+              <div className="mb-4 p-3 bg-success-50 border border-success-200 rounded-lg">
+                <p className="text-sm text-success-800">{inviteSuccess}</p>
+              </div>
+            )}
+
+            <p className="text-neutral-600 mb-4">
+              Digite os emails dos convidados separados por vírgula ou quebra de linha:
+            </p>
+
+            <textarea
+              rows={6}
+              value={guestEmails}
+              onChange={(e) => setGuestEmails(e.target.value)}
+              placeholder="exemplo1@email.com, exemplo2@email.com&#10;exemplo3@email.com"
+              className="w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none mb-4"
+              disabled={isSendingInvites}
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowInviteModal(false);
+                  setGuestEmails('');
+                  setError('');
+                  setInviteSuccess('');
+                }}
+                className="flex-1 py-3 px-4 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-medium rounded-lg transition-colors"
+                disabled={isSendingInvites}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSendInvites}
+                disabled={isSendingInvites}
+                className="flex-1 py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSendingInvites ? 'Enviando...' : 'Enviar Convites'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
