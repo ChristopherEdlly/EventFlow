@@ -43,14 +43,14 @@ COPY nginx-prod.conf /etc/nginx/http.d/default.conf
 COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
-# Create non-root user
+# Create non-root user and setup nginx directories
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nestjs -u 1001 && \
     chown -R nestjs:nodejs /app && \
     chown -R nestjs:nodejs /var/lib/nginx && \
     chown -R nestjs:nodejs /var/log/nginx && \
-    touch /var/run/nginx.pid && \
-    chown -R nestjs:nodejs /var/run/nginx.pid
+    mkdir -p /run/nginx && \
+    chown -R nestjs:nodejs /run/nginx
 
 USER nestjs
 
