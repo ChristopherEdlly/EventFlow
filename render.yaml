@@ -7,7 +7,7 @@ services:
     plan: free
     envVars:
       - key: JWT_SECRET
-        generateValue: true
+        value: Um4v8rEG10dbJTtIqup4Xt7b48WnmvKDCQsJqiBmTynORmQAmunMT0t1MBK2/Awe
       - key: NODE_ENV
         value: production
       - key: PORT
