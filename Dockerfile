@@ -50,7 +50,10 @@ RUN addgroup -g 1001 -S nodejs && \
     chown -R nestjs:nodejs /var/lib/nginx && \
     chown -R nestjs:nodejs /var/log/nginx && \
     mkdir -p /run/nginx && \
-    chown -R nestjs:nodejs /run/nginx
+    chown -R nestjs:nodejs /run/nginx && \
+    # Make nginx site config writable by the runtime user so start.sh can patch listen port
+    mkdir -p /etc/nginx/http.d && \
+    chown -R nestjs:nodejs /etc/nginx/http.d
 
 USER nestjs
 
