@@ -393,19 +393,227 @@ export class EventsController {
 
     if (!guest) throw new NotFoundException('Convite não encontrado');
     if (guest.eventId !== eventId) throw new BadRequestException('Convite não pertence a este evento');
-    if (guest.email !== user.email) throw new ForbiddenException('Você não pode atualizar o status de outro convidado');
 
-    const { status } = body;
-    if (!['YES', 'NO', 'MAYBE'].includes(status)) {
-      throw new BadRequestException('Status inválido. Use: YES, NO ou MAYBE');
+    // Check if user is event owner or the guest themselves
+    const isOwner = guest.event.ownerId === uid;
+    const isGuest = guest.email === user.email;
+
+    if (!isOwner && !isGuest) {
+      throw new ForbiddenException('Você não pode atualizar este convidado');
     }
 
-    // Update guest status
+    const { status, name } = body;
+
+    // If updating status, validate it
+    if (status && !['YES', 'NO', 'MAYBE', 'PENDING', 'WAITLISTED'].includes(status)) {
+      throw new BadRequestException('Status inválido. Use: YES, NO, MAYBE, PENDING ou WAITLISTED');
+    }
+
+    // Only guest can update their own status, only owner can update name
+    if (status && !isGuest) {
+      throw new ForbiddenException('Apenas o convidado pode atualizar seu próprio status');
+    }
+
+    if (name && !isOwner) {
+      throw new ForbiddenException('Apenas o organizador pode editar o nome do convidado');
+    }
+
+    // Update guest
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateData: any = {};
+    if (status) {
+      updateData.status = status;
+      updateData.respondedAt = new Date(); // Register when guest responded
+    }
+    if (name) updateData.name = name;
+
     const updated = await this.prisma.guest.update({
       where: { id: guestId },
-      data: { status },
+      data: updateData,
     });
 
     return updated;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':eventId/guests/:guestId')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteGuest(
+    @Param('eventId') eventId: string,
+    @Param('guestId') guestId: string,
+    @Req() req: any,
+  ) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Find guest
+    const guest = await this.prisma.guest.findUnique({
+      where: { id: guestId },
+      include: { event: true },
+    });
+
+    if (!guest) throw new NotFoundException('Convite não encontrado');
+    if (guest.eventId !== eventId) throw new BadRequestException('Convite não pertence a este evento');
+
+    // Only event owner can delete guests
+    if (guest.event.ownerId !== uid) {
+      throw new ForbiddenException('Apenas o organizador pode remover convidados');
+    }
+
+    // Delete guest
+    await this.prisma.guest.delete({
+      where: { id: guestId },
+    });
+
+    return { message: 'Convidado removido com sucesso' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/announcements')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getAnnouncements(@Param('id') id: string, @Req() req: any) {
+    const uid = req.user?.userId;
+
+    // Check if user has access to this event (owner or guest)
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      select: { ownerId: true, visibility: true },
+    });
+
+    if (!event) throw new NotFoundException('Evento não encontrado');
+
+    // If private, check if user is owner or guest
+    if (event.visibility === 'PRIVATE' && uid) {
+      if (event.ownerId !== uid) {
+        const user = await this.prisma.user.findUnique({
+          where: { id: uid },
+          select: { email: true },
+        });
+        const isGuest = await this.prisma.guest.findFirst({
+          where: { eventId: id, email: user?.email },
+        });
+        if (!isGuest) throw new ForbiddenException('Não autorizado');
+      }
+    }
+
+    // Get announcements
+    const announcements = await this.prisma.announcement.findMany({
+      where: { eventId: id },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return announcements;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/announcements')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async createAnnouncement(
+    @Param('id') id: string,
+    @Body() body: any,
+    @Req() req: any,
+  ) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Check if user is the event owner
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      select: { ownerId: true },
+    });
+
+    if (!event) throw new NotFoundException('Evento não encontrado');
+    if (event.ownerId !== uid) {
+      throw new ForbiddenException('Apenas o criador pode adicionar anúncios');
+    }
+
+    const { message } = body;
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      throw new BadRequestException('Mensagem é obrigatória');
+    }
+
+    // Create announcement
+    const announcement = await this.prisma.announcement.create({
+      data: {
+        message: message.trim(),
+        eventId: id,
+        createdBy: uid,
+      },
+    });
+
+    return announcement;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':eventId/announcements/:announcementId')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async updateAnnouncement(
+    @Param('eventId') eventId: string,
+    @Param('announcementId') announcementId: string,
+    @Body() body: any,
+    @Req() req: any,
+  ) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Find the announcement and check ownership
+    const announcement = await this.prisma.announcement.findUnique({
+      where: { id: announcementId },
+      include: { event: true },
+    });
+
+    if (!announcement) throw new NotFoundException('Anúncio não encontrado');
+    if (announcement.eventId !== eventId) {
+      throw new BadRequestException('Anúncio não pertence a este evento');
+    }
+    if (announcement.event.ownerId !== uid) {
+      throw new ForbiddenException('Apenas o criador do evento pode editar anúncios');
+    }
+
+    const { message } = body;
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      throw new BadRequestException('Mensagem é obrigatória');
+    }
+
+    // Update announcement
+    const updated = await this.prisma.announcement.update({
+      where: { id: announcementId },
+      data: { message: message.trim() },
+    });
+
+    return updated;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':eventId/announcements/:announcementId')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteAnnouncement(
+    @Param('eventId') eventId: string,
+    @Param('announcementId') announcementId: string,
+    @Req() req: any,
+  ) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Find the announcement and check ownership
+    const announcement = await this.prisma.announcement.findUnique({
+      where: { id: announcementId },
+      include: { event: true },
+    });
+
+    if (!announcement) throw new NotFoundException('Anúncio não encontrado');
+    if (announcement.eventId !== eventId) {
+      throw new BadRequestException('Anúncio não pertence a este evento');
+    }
+    if (announcement.event.ownerId !== uid) {
+      throw new ForbiddenException('Apenas o criador do evento pode deletar anúncios');
+    }
+
+    // Delete announcement
+    await this.prisma.announcement.delete({
+      where: { id: announcementId },
+    });
+
+    return { message: 'Anúncio removido com sucesso' };
   }
 }

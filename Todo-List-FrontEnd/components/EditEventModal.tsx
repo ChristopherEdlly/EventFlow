@@ -1,25 +1,23 @@
-import React, { useState } from 'react';
-import { eventsService, type CreateEventDto } from '../services/events';
+import React, { useState, useEffect } from 'react';
+import { eventsService, type Event, type UpdateEventDto } from '../services/events';
 import type { ApiError } from '../services/api';
 
-interface EventFormModalProps {
+interface EditEventModalProps {
+  event: Event;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function EventFormModal({ onClose, onSuccess }: EventFormModalProps) {
-  const [formData, setFormData] = useState<CreateEventDto>({
-    title: '',
-    description: '',
-    date: '',
-    time: '',
-    location: '',
-    visibility: 'PUBLIC',
-    capacity: undefined,
-    allowWaitlist: false,
-    requireApproval: false,
+export default function EditEventModal({ event, onClose, onSuccess }: EditEventModalProps) {
+  const [formData, setFormData] = useState<UpdateEventDto>({
+    title: event.title,
+    description: event.description || '',
+    date: new Date(event.date).toISOString().split('T')[0],
+    time: event.time || '',
+    location: event.location || '',
+    visibility: event.visibility,
+    capacity: event.capacity || undefined,
   });
-  const [guestEmails, setGuestEmails] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -29,30 +27,12 @@ export default function EventFormModal({ onClose, onSuccess }: EventFormModalPro
     setIsLoading(true);
 
     try {
-      const event = await eventsService.createEvent(formData);
-
-      // Add guests if emails were provided
-      if (guestEmails.trim()) {
-        const emails = guestEmails
-          .split(/[,\n]/)
-          .map(email => email.trim())
-          .filter(email => email.length > 0);
-
-        if (emails.length > 0) {
-          try {
-            await eventsService.addGuestsByEmail(event.id, emails);
-          } catch (err) {
-            console.error('Failed to add guests:', err);
-            // Don't fail the whole operation if guests fail
-          }
-        }
-      }
-
+      await eventsService.updateEvent(event.id, formData);
       onSuccess();
       onClose();
     } catch (err) {
       const apiError = err as ApiError;
-      setError(apiError.message || 'Failed to create event');
+      setError(apiError.message || 'Falha ao atualizar evento');
     } finally {
       setIsLoading(false);
     }
@@ -62,7 +42,7 @@ export default function EventFormModal({ onClose, onSuccess }: EventFormModalPro
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-neutral-900">Criar Novo Evento</h2>
+          <h2 className="text-2xl font-bold text-neutral-900">Editar Evento</h2>
           <button
             onClick={onClose}
             className="text-neutral-400 hover:text-neutral-600 transition-colors"
@@ -175,44 +155,6 @@ export default function EventFormModal({ onClose, onSuccess }: EventFormModalPro
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Convidar pessoas (opcional)
-            </label>
-            <textarea
-              rows={4}
-              value={guestEmails}
-              onChange={(e) => setGuestEmails(e.target.value)}
-              className="w-full px-4 py-3 bg-white text-neutral-900 placeholder-neutral-400 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
-              placeholder="Digite os emails separados por vírgula ou quebra de linha&#10;Ex: joao@email.com, maria@email.com"
-            />
-            <p className="text-xs text-neutral-500 mt-1">
-              Digite os emails dos convidados separados por vírgula ou quebra de linha
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={formData.allowWaitlist}
-                onChange={(e) => setFormData({ ...formData, allowWaitlist: e.target.checked })}
-                className="w-5 h-5 text-primary-600 border-neutral-300 rounded focus:ring-2 focus:ring-primary-500"
-              />
-              <span className="text-sm text-neutral-700">Permitir lista de espera</span>
-            </label>
-
-            <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={formData.requireApproval}
-                onChange={(e) => setFormData({ ...formData, requireApproval: e.target.checked })}
-                className="w-5 h-5 text-primary-600 border-neutral-300 rounded focus:ring-2 focus:ring-primary-500"
-              />
-              <span className="text-sm text-neutral-700">Requer aprovação para participar</span>
-            </label>
-          </div>
-
           <div className="flex gap-3 pt-4">
             <button
               type="button"
@@ -226,7 +168,7 @@ export default function EventFormModal({ onClose, onSuccess }: EventFormModalPro
               disabled={isLoading}
               className="flex-1 py-3 px-4 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {isLoading ? 'Criando...' : 'Criar Evento'}
+              {isLoading ? 'Salvando...' : 'Salvar Alterações'}
             </button>
           </div>
         </form>

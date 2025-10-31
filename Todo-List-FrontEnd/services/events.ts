@@ -41,8 +41,8 @@ export interface Guest {
   status: GuestStatus;
   eventId: string;
   userId: string | null;
+  respondedAt: string | null;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface CreateEventDto {
@@ -73,6 +73,14 @@ export interface UpdateEventDto {
 export interface AddGuestDto {
   name: string;
   email: string;
+}
+
+export interface Announcement {
+  id: string;
+  message: string;
+  eventId: string;
+  createdBy: string;
+  createdAt: string;
 }
 
 class EventsService {
@@ -126,8 +134,34 @@ class EventsService {
     });
   }
 
-  async removeGuest(eventId: string, guestId: string): Promise<void> {
-    return api.delete<void>(`/events/${eventId}/guests/${guestId}`);
+  async updateGuestName(
+    eventId: string,
+    guestId: string,
+    name: string
+  ): Promise<Guest> {
+    return api.patch<Guest>(`/events/${eventId}/guests/${guestId}`, {
+      name,
+    });
+  }
+
+  async removeGuest(eventId: string, guestId: string): Promise<{ message: string }> {
+    return api.delete<{ message: string }>(`/events/${eventId}/guests/${guestId}`);
+  }
+
+  async getEventAnnouncements(eventId: string): Promise<Announcement[]> {
+    return api.get<Announcement[]>(`/events/${eventId}/announcements`);
+  }
+
+  async createAnnouncement(eventId: string, message: string): Promise<Announcement> {
+    return api.post<Announcement>(`/events/${eventId}/announcements`, { message });
+  }
+
+  async updateAnnouncement(eventId: string, announcementId: string, message: string): Promise<Announcement> {
+    return api.patch<Announcement>(`/events/${eventId}/announcements/${announcementId}`, { message });
+  }
+
+  async deleteAnnouncement(eventId: string, announcementId: string): Promise<{ message: string }> {
+    return api.delete<{ message: string }>(`/events/${eventId}/announcements/${announcementId}`);
   }
 }
 

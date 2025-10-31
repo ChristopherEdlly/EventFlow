@@ -143,6 +143,20 @@ class ApiClient {
   async getProfile(): Promise<{ id: string; name: string; email: string; createdAt: string }> {
     return this.get('/auth/profile');
   }
+
+  async updateProfile(data: { name?: string; email?: string }): Promise<{ id: string; name: string; email: string; createdAt: string }> {
+    return this.patch('/auth/profile', data);
+  }
+
+  async updatePassword(data: { currentPassword: string; newPassword: string }): Promise<{ message: string }> {
+    return this.patch('/auth/password', data);
+  }
+
+  async deleteAccount(password: string): Promise<{ message: string }> {
+    const result = await this.delete<{ message: string }>(`/auth/account?password=${encodeURIComponent(password)}`);
+    this.clearToken();
+    return result;
+  }
 }
 
 // Export singleton instance

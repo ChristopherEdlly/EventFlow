@@ -38,17 +38,28 @@ model Event {
   ownerId        String
   owner          User     @relation("OwnerEvents", fields: [ownerId], references: [id])
   guests         Guest[]
+  announcements  Announcement[]
   createdAt      DateTime @default(now())
 }
 
 model Guest {
+  id          String    @id @default(uuid())
+  name        String
+  email       String
+  status      String    // PENDING, YES, NO, MAYBE, WAITLISTED
+  eventId     String
+  event       Event     @relation(fields: [eventId], references: [id])
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  respondedAt DateTime? // Data e hora da última alteração de status
+  createdAt   DateTime  @default(now())
+}
+
+model Announcement {
   id        String   @id @default(uuid())
-  name      String
-  email     String
-  status    String   // PENDING, YES, NO, MAYBE, WAITLISTED
+  message   String
   eventId   String
   event     Event    @relation(fields: [eventId], references: [id])
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
+  createdBy String
   createdAt DateTime @default(now())
 }

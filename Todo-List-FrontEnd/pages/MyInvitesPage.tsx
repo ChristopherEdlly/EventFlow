@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { eventsService, type Event, type Guest, type GuestStatus } from '../services/events';
 import type { ApiError } from '../services/api';
+import EmptyState from '../components/EmptyState';
 
 interface MyInvitesPageProps {
   onBack: () => void;
@@ -132,19 +133,15 @@ export default function MyInvitesPage({ onBack }: MyInvitesPageProps) {
             </div>
           </div>
         ) : invites.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full mb-4">
+          <EmptyState
+            title="Nenhum convite pendente"
+            description="Quando você receber convites, eles aparecerão aqui"
+            icon={
               <svg className="w-10 h-10 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-neutral-900 mb-2">
-              Nenhum convite pendente
-            </h3>
-            <p className="text-neutral-600">
-              Quando você receber convites, eles aparecerão aqui
-            </p>
-          </div>
+            }
+          />
         ) : (
           <div className="space-y-4">
             {invites.map((event) => (
@@ -247,7 +244,7 @@ export default function MyInvitesPage({ onBack }: MyInvitesPageProps) {
               value={declineReason}
               onChange={(e) => setDeclineReason(e.target.value)}
               placeholder="Ex: Tenho outro compromisso neste dia..."
-              className="w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none mb-4"
+              className="w-full px-4 py-3 bg-white text-neutral-900 placeholder-neutral-400 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none mb-4"
             />
 
             <div className="flex gap-3">

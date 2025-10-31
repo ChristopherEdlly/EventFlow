@@ -22,9 +22,16 @@ async function bootstrap() {
     }),
   );
 
-  // CORS
+  // CORS - Allow multiple origins
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:3002',
+      '127.0.0.1:3001',
+      '*',
+      process.env.CORS_ORIGIN || '',
+    ].filter(Boolean),
     credentials: true,
   });
 

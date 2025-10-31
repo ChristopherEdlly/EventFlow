@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { eventsService, type Event } from '../services/events';
 import type { ApiError } from '../services/api';
+import EmptyState from '../components/EmptyState';
 
 interface PublicEventsPageProps {
   onBack: () => void;
@@ -65,7 +66,7 @@ export default function PublicEventsPage({ onBack, onViewEvent }: PublicEventsPa
               placeholder="Buscar eventos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 pl-12 bg-white border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+              className="w-full px-4 py-3 pl-12 bg-white text-neutral-900 placeholder-neutral-400 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
             />
             <svg
               className="absolute left-4 top-3.5 w-5 h-5 text-neutral-400"
@@ -95,19 +96,15 @@ export default function PublicEventsPage({ onBack, onViewEvent }: PublicEventsPa
             </div>
           </div>
         ) : filteredEvents.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full mb-4">
+          <EmptyState
+            title={searchTerm ? 'Nenhum evento encontrado' : 'Nenhum evento público disponível'}
+            description={searchTerm ? 'Tente buscar com outros termos' : 'Aguarde novos eventos serem publicados'}
+            icon={
               <svg className="w-10 h-10 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-neutral-900 mb-2">
-              {searchTerm ? 'Nenhum evento encontrado' : 'Nenhum evento público disponível'}
-            </h3>
-            <p className="text-neutral-600">
-              {searchTerm ? 'Tente buscar com outros termos' : 'Aguarde novos eventos serem publicados'}
-            </p>
-          </div>
+            }
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredEvents.map((event) => (
