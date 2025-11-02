@@ -4,7 +4,7 @@ services:
   # Backend API Service
   backend:
     build:
-      context: ./Todo-List-BackEnd
+      context: ./EventFlow-Backend
       dockerfile: Dockerfile
     container_name: event-manager-backend
     restart: unless-stopped
@@ -29,7 +29,7 @@ services:
   # Frontend Web Application
   frontend:
     build:
-      context: ./Todo-List-FrontEnd
+      context: ./EventFlow-FrontEnd
       dockerfile: Dockerfile
     container_name: event-manager-frontend
     restart: unless-stopped

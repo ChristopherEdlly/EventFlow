@@ -3,21 +3,21 @@ FROM node:20-alpine AS frontend-builder
 
 # Build Frontend
 WORKDIR /app/frontend
-COPY Todo-List-FrontEnd/package*.json ./
+COPY EventFlow-FrontEnd/package*.json ./
 RUN npm ci
 
-COPY Todo-List-FrontEnd/ ./
+COPY EventFlow-FrontEnd/ ./
 RUN npm run build
 
 # Build Backend
 FROM node:20-alpine AS backend-builder
 
 WORKDIR /app/backend
-COPY Todo-List-BackEnd/package*.json ./
-COPY Todo-List-BackEnd/prisma ./prisma/
+COPY EventFlow-Backend/package*.json ./
+COPY EventFlow-Backend/prisma ./prisma/
 RUN npm ci
 
-COPY Todo-List-BackEnd/ ./
+COPY EventFlow-Backend/ ./
 RUN npx prisma generate
 RUN npm run build
 
