@@ -3,7 +3,9 @@
  * Centralized API communication with error handling
  */
 
-const API_BASE_URL = (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL || '';
+// Em produção, usa URLs relativas (mesmo domínio). Em dev, usa localhost se definido.
+const API_BASE_URL = (import.meta as { env?: { VITE_API_URL?: string; MODE?: string } }).env?.VITE_API_URL || 
+  ((import.meta as { env?: { MODE?: string } }).env?.MODE === 'production' ? '' : 'http://localhost:8080');
 
 interface ApiError {
   message: string;
