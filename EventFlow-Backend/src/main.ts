@@ -13,8 +13,21 @@ async function bootstrap() {
   // Cookie parser (required for JWT authentication)
   app.use(cookieParser());
 
-  // Security
-  app.use(helmet());
+  // Check if running behind proxy (nginx in production)
+  const isBehindProxy = process.env.NODE_ENV === 'production';
+
+  // Security - Helmet with CORS-friendly settings
+  if (!isBehindProxy) {
+    // Only use helmet in development (nginx handles security in production)
+    app.use(
+      helmet({
+        crossOriginResourcePolicy: false,
+        crossOriginEmbedderPolicy: false,
+      }),
+    );
+  }
+
+  // Rate limiting
   app.use(
     rateLimit({
       windowMs: 15 * 60 * 1000, // 15 minutes
@@ -22,23 +35,27 @@ async function bootstrap() {
     }),
   );
 
-  // CORS - Allow all origins in production (nginx handles security)
-  // In development, restrict to specific origins
-  const isProduction = process.env.NODE_ENV === 'production';
-
-  app.enableCors({
-    origin: isProduction ? true : [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3002',
-      'https://eventflow-ivhk.onrender.com',
-      process.env.CORS_ORIGIN,
-    ].filter(Boolean),
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    exposedHeaders: ['set-cookie'],
-  });
+  // CORS Configuration
+  if (isBehindProxy) {
+    // In production: Nginx handles CORS, disable NestJS CORS to avoid conflicts
+    console.log('Running behind proxy - CORS handled by nginx');
+  } else {
+    // In development: Enable CORS in NestJS
+    app.enableCors({
+      origin: [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3002',
+        'http://localhost:8080',
+        process.env.CORS_ORIGIN,
+      ].filter(Boolean),
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+      exposedHeaders: ['set-cookie'],
+    });
+    console.log('CORS enabled for development');
+  }
 
   // Global filters and interceptors
   app.useGlobalFilters(new AllExceptionsFilter());
