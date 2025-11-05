@@ -311,6 +311,42 @@ export class EventsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get(':id/guests')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getEventGuests(@Param('id') id: string, @Req() req: any) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Check if event exists
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      select: { ownerId: true, visibility: true },
+    });
+
+    if (!event) throw new NotFoundException('Evento não encontrado');
+
+    // Allow owner or public event guests to see the list
+    const isOwner = event.ownerId === uid;
+    const isPublic = event.visibility === 'PUBLIC';
+
+    // Check if user is a guest of this event
+    const isGuest = await this.prisma.guest.findFirst({
+      where: { eventId: id, userId: uid },
+    });
+
+    if (!isOwner && !isPublic && !isGuest) {
+      throw new ForbiddenException('Você não tem permissão para ver os convidados deste evento');
+    }
+
+    const guests = await this.prisma.guest.findMany({
+      where: { eventId: id },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return guests;
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post(':id/guests')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async addGuests(@Param('id') id: string, @Body() body: any, @Req() req: any) {
