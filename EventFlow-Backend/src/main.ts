@@ -28,6 +28,7 @@ async function bootstrap() {
       'http://localhost:3000',
       'http://localhost:3001',
       'http://localhost:3002',
+      'https://eventflow-ivhk.onrender.com'
       '127.0.0.1:3001',
       '*',
       process.env.CORS_ORIGIN || '',
