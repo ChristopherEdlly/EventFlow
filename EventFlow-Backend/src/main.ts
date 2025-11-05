@@ -23,18 +23,43 @@ async function bootstrap() {
   );
 
   // CORS - Allow multiple origins
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'https://eventflow-ivhk.onrender.com',
+    process.env.CORS_ORIGIN,
+  ].filter(Boolean);
+
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3002',
-      'https://eventflow-ivhk.onrender.com',
-      '127.0.0.1:3001',
-      '127.0.0.1:3000',
-      '*',
-      process.env.CORS_ORIGIN || '',
-    ].filter(Boolean),
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, postman)
+      if (!origin) return callback(null, true);
+
+      // In production, allow the render domain
+      if (process.env.NODE_ENV === 'production') {
+        // Allow same-origin (nginx proxy)
+        if (origin.includes('eventflow-ivhk.onrender.com')) {
+          return callback(null, true);
+        }
+      }
+
+      // Check if origin is in allowed list
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        // In production, allow all origins (since nginx is handling it)
+        if (process.env.NODE_ENV === 'production') {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['set-cookie'],
   });
 
   // Global filters and interceptors
