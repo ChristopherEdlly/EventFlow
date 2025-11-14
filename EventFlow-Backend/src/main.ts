@@ -27,35 +27,47 @@ async function bootstrap() {
     );
   }
 
-  // Rate limiting
+  // Rate limiting - More permissive for development
   app.use(
     rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 100, // limit each IP to 100 requests per windowMs
+      windowMs: 1 * 60 * 1000, // 1 minute
+      max: 1000, // limit each IP to 1000 requests per minute (very permissive)
+      standardHeaders: true,
+      legacyHeaders: false,
     }),
   );
 
-  // CORS Configuration
-  if (isBehindProxy) {
-    // In production: Nginx handles CORS, disable NestJS CORS to avoid conflicts
-    console.log('Running behind proxy - CORS handled by nginx');
-  } else {
-    // In development: Enable CORS in NestJS
-    app.enableCors({
-      origin: [
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://localhost:3002',
-        'http://localhost:8080',
-        process.env.CORS_ORIGIN,
-      ].filter(Boolean),
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-      exposedHeaders: ['set-cookie'],
-    });
-    console.log('CORS enabled for development');
-  }
+  // CORS Configuration - Always enable to avoid intermittent issues
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://localhost:8080',
+    process.env.CORS_ORIGIN,
+  ].filter(Boolean);
+
+  app.enableCors({
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+
+      // Check if origin is in allowed list
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`CORS blocked origin: ${origin}`);
+        callback(null, false);
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    exposedHeaders: ['set-cookie'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  });
+
+  console.log(`CORS enabled for origins: ${allowedOrigins.join(', ')}`);
 
   // Global filters and interceptors
   app.useGlobalFilters(new AllExceptionsFilter());
