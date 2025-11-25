@@ -70,7 +70,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <svg className="animate-spin h-8 w-8 text-teal-500" fill="none" viewBox="0 0 24 24">
+        <svg className="animate-spin h-8 w-8 text-primary-500" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -97,7 +97,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
                 placeholder="Buscar por nome do evento..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
               />
               <svg
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -114,7 +114,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
+            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
           >
             <option value="all">Todos os Status</option>
             <option value="DRAFT">Rascunho</option>
@@ -127,7 +127,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
           <select
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
+            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
           >
             <option value="all">Todas as Datas</option>
             <option value="upcoming">Próximos</option>
@@ -138,7 +138,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
           <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded ${viewMode === 'list' ? 'bg-white shadow-sm text-teal-600' : 'text-gray-500'}`}
+              className={`p-2 rounded ${viewMode === 'list' ? 'bg-white shadow-sm text-primary-600' : 'text-gray-500'}`}
               title="Visualização em lista"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,7 +147,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded ${viewMode === 'grid' ? 'bg-white shadow-sm text-teal-600' : 'text-gray-500'}`}
+              className={`p-2 rounded ${viewMode === 'grid' ? 'bg-white shadow-sm text-primary-600' : 'text-gray-500'}`}
               title="Visualização em grade"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -245,7 +245,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
               <button className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
                 Anterior
               </button>
-              <button className="px-3 py-1 text-sm bg-teal-500 text-white rounded">1</button>
+              <button className="px-3 py-1 text-sm bg-primary-500 text-white rounded">1</button>
               <button className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">2</button>
               <button className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">3</button>
               <button className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">

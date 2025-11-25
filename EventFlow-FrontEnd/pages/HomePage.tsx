@@ -57,7 +57,7 @@ export default function HomePage({ onViewEvent }: HomePageProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <svg className="animate-spin h-8 w-8 text-teal-500" fill="none" viewBox="0 0 24 24">
+        <svg className="animate-spin h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -75,10 +75,10 @@ export default function HomePage({ onViewEvent }: HomePageProps) {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg p-6 text-white">
+        <div className="bg-gradient-to-br from-primary-500 to-secondary-600 rounded-lg p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-teal-100 text-sm mb-1">Eventos Ativos</p>
+              <p className="text-primary-100 text-sm mb-1">Eventos Ativos</p>
               <p className="text-3xl font-bold">{events.length}</p>
             </div>
             <svg className="w-12 h-12 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,7 +120,7 @@ export default function HomePage({ onViewEvent }: HomePageProps) {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-gray-900">Eventos Ativos e Próximos</h2>
-              <a href="#" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
+              <a href="#" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
                 Ver todos os eventos
               </a>
             </div>
@@ -135,7 +135,7 @@ export default function HomePage({ onViewEvent }: HomePageProps) {
                   <div
                     key={event.id}
                     onClick={() => onViewEvent(event.id)}
-                    className="relative bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg p-6 text-white cursor-pointer hover:shadow-lg transition-shadow overflow-hidden group"
+                    className="relative bg-gradient-to-br from-primary-500 to-secondary-600 rounded-lg p-6 text-white cursor-pointer hover:shadow-lg transition-shadow overflow-hidden group"
                   >
                     {/* Decorative circles */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
@@ -187,12 +187,12 @@ export default function HomePage({ onViewEvent }: HomePageProps) {
             <div className="space-y-4">
               {recentActivity.map((activity) => (
                 <div key={activity.id} className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-2 h-2 bg-teal-500 rounded-full mt-2"></div>
+                  <div className="flex-shrink-0 w-2 h-2 bg-primary-500 rounded-full mt-2"></div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900">
                       <span className="font-medium">{activity.user}</span>{' '}
                       {activity.action} no evento{' '}
-                      <span className="font-medium text-teal-700">{activity.event}</span>
+                      <span className="font-medium text-primary-700">{activity.event}</span>
                     </p>
                     <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
                   </div>
@@ -211,8 +211,8 @@ export default function HomePage({ onViewEvent }: HomePageProps) {
               {pendingInvites.map((invite) => (
                 <div key={invite.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
-                      <span className="text-xs font-medium text-teal-700">
+                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-medium text-primary-700">
                         {invite.name.charAt(0)}
                       </span>
                     </div>
@@ -221,7 +221,7 @@ export default function HomePage({ onViewEvent }: HomePageProps) {
                       <p className="text-xs text-gray-500">Enviado há {invite.days} dias</p>
                     </div>
                   </div>
-                  <button className="text-xs text-teal-600 hover:text-teal-700 font-medium">
+                  <button className="text-xs text-primary-600 hover:text-primary-700 font-medium">
                     Reenviar
                   </button>
                 </div>

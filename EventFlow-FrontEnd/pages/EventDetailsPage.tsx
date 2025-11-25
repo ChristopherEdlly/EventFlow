@@ -63,7 +63,7 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <svg className="animate-spin h-8 w-8 text-teal-500" fill="none" viewBox="0 0 24 24">
+        <svg className="animate-spin h-8 w-8 text-primary-500" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -75,7 +75,7 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">Evento não encontrado</p>
-        <button onClick={onBack} className="mt-4 text-teal-600 hover:text-teal-700">
+        <button onClick={onBack} className="mt-4 text-primary-600 hover:text-primary-700">
           Voltar
         </button>
       </div>
@@ -85,7 +85,7 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
   return (
     <div>
       {/* Header with Cover Image */}
-      <div className="relative h-64 bg-gradient-to-br from-teal-400 via-cyan-500 to-orange-400 rounded-2xl overflow-hidden mb-6">
+      <div className="relative h-64 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-2xl overflow-hidden mb-6">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="absolute bottom-0 left-0 right-0 p-8">
           <button
@@ -121,7 +121,7 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
           <div className="flex gap-2 mt-2">
             {isOwner && (
               <>
-                <button className="flex-1 px-3 py-2 bg-teal-500 hover:bg-teal-600 text-white text-xs font-medium rounded-lg transition-colors">
+                <button className="flex-1 px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white text-xs font-medium rounded-lg transition-colors">
                   Editar Evento
                 </button>
                 <button className="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors">
@@ -141,7 +141,7 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
             onClick={() => setCurrentTab('details')}
             className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
               currentTab === 'details'
-                ? 'text-teal-600 border-b-2 border-teal-600 bg-teal-50'
+                ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
             }`}
           >
@@ -151,7 +151,7 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
             onClick={() => setCurrentTab('guests')}
             className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
               currentTab === 'guests'
-                ? 'text-teal-600 border-b-2 border-teal-600 bg-teal-50'
+                ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
             }`}
           >
@@ -161,7 +161,7 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
             onClick={() => setCurrentTab('announcements')}
             className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
               currentTab === 'announcements'
-                ? 'text-teal-600 border-b-2 border-teal-600 bg-teal-50'
+                ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
             }`}
           >
@@ -262,7 +262,8 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
                         cy="96"
                         r="80"
                         fill="none"
-                        stroke="#14b8a6"
+                        stroke="currentColor"
+                        className="text-primary-500"
                         strokeWidth="16"
                         strokeDasharray={`${stats.confirmationRate * 5.02} 502`}
                         strokeLinecap="round"
@@ -285,8 +286,8 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
                   guests.map((guest) => (
                     <div key={guest.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-teal-700">
+                        <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-medium text-primary-700">
                             {guest.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
@@ -323,7 +324,7 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
                   </svg>
                   <p className="text-gray-500 mb-4">Nenhum anúncio ainda</p>
                   {isOwner && (
-                    <button className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg transition-colors">
+                    <button className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors">
                       Criar Anúncio
                     </button>
                   )}

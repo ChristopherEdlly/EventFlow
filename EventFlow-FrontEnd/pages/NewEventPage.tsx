@@ -58,7 +58,7 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
       {/* Breadcrumb */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-          <button onClick={onBack} className="hover:text-teal-600">
+          <button onClick={onBack} className="hover:text-primary-600">
             Eventos
           </button>
           <span>/</span>
@@ -94,7 +94,7 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
                 value={formData.title}
                 onChange={(e) => handleChange('title', e.target.value)}
                 placeholder="Ex: Conferência Anual de Tecnologia"
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
             </div>
@@ -108,7 +108,7 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
                 onChange={(e) => handleChange('description', e.target.value)}
                 placeholder="Descreva o propósito, a agenda e os destaques do evento."
                 rows={4}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
               />
             </div>
 
@@ -121,7 +121,7 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
                 value={formData.organizer}
                 onChange={(e) => handleChange('organizer', e.target.value)}
                 placeholder="Ex: João da Silva"
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -140,7 +140,7 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
                 type="datetime-local"
                 value={formData.date}
                 onChange={(e) => handleChange('date', e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
             </div>
@@ -153,7 +153,7 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
                 type="datetime-local"
                 value={formData.endDate}
                 onChange={(e) => handleChange('endDate', e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -176,7 +176,7 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
                 value={formData.location}
                 onChange={(e) => handleChange('location', e.target.value)}
                 placeholder="Ex: Av. Paulista, 1000, São Paulo - SP ou link zoom.us/j/1234"
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -194,7 +194,7 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
               <select
                 value={formData.state}
                 onChange={(e) => handleChange('state', e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="DRAFT">Planejado</option>
                 <option value="PUBLISHED">Publicado</option>
@@ -216,7 +216,7 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
                     value="PUBLIC"
                     checked={formData.visibility === 'PUBLIC'}
                     onChange={(e) => handleChange('visibility', e.target.value)}
-                    className="w-4 h-4 text-teal-600 focus:ring-teal-500"
+                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
                   />
                   <span className="text-sm text-gray-700">Público</span>
                 </label>
@@ -227,7 +227,7 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
                     value="PRIVATE"
                     checked={formData.visibility !== 'PUBLIC'}
                     onChange={(e) => handleChange('visibility', e.target.value)}
-                    className="w-4 h-4 text-teal-600 focus:ring-teal-500"
+                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
                   />
                   <span className="text-sm text-gray-700">Privado</span>
                 </label>
@@ -248,7 +248,7 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
           <button
             type="submit"
             disabled={isSaving}
-            className="px-6 py-2.5 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-2.5 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2"
           >
             {isSaving && (
               <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
