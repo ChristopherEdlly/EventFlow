@@ -1,22 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { api } from './services/api';
 import { ToastProvider } from './context/ToastContext';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import DashboardPage from './pages/DashboardPage';
+import HomePage from './pages/HomePage';
 import PublicEventsPage from './pages/PublicEventsPage';
 import MyInvitesPage from './pages/MyInvitesPage';
 import EventDetailsPage from './pages/EventDetailsPage';
 import ProfilePage from './pages/ProfilePage';
 import HistoryPage from './pages/HistoryPage';
-import HomePage from './pages/HomePage';
 import MyEventsPage from './pages/MyEventsPage';
 import NewEventPage from './pages/NewEventPage';
 import GuestsPage from './pages/GuestsPage';
 import SettingsPage from './pages/SettingsPage';
-
-type Page = 'login' | 'register' | 'dashboard' | 'publicEvents' | 'myInvites' | 'eventDetails' | 'profile' | 'history' | 'myEvents' | 'newEvent' | 'guests' | 'settings';
 
 interface UserProfile {
   id: string;
@@ -24,11 +22,34 @@ interface UserProfile {
   email: string;
 }
 
-function App() {
-  const [page, setPage] = useState<Page>(api.isAuthenticated() ? 'dashboard' : 'login');
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+// Componente wrapper para páginas autenticadas
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = api.isAuthenticated();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+// Componente wrapper para páginas públicas (login/register)
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = api.isAuthenticated();
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+// Componente interno que usa hooks do router
+function AppRoutes() {
+  const navigate = useNavigate();
   const [checkingAuth, setCheckingAuth] = useState(api.isAuthenticated());
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   useEffect(() => {
     // Se há token salvo, tenta validar com o backend
@@ -36,25 +57,24 @@ function App() {
       api.getProfile()
         .then((profile) => {
           setUserProfile(profile);
-          setPage('dashboard');
         })
         .catch(() => {
           api.logout();
-          setPage('login');
+          navigate('/login');
         })
         .finally(() => setCheckingAuth(false));
     } else {
       setCheckingAuth(false);
     }
-  }, []);
+  }, [navigate]);
 
   const handleLogin = async () => {
     try {
       const profile = await api.getProfile();
       setUserProfile(profile);
-      setPage('dashboard');
+      navigate('/');
     } catch {
-      setPage('dashboard');
+      navigate('/');
     }
   };
 
@@ -62,99 +82,263 @@ function App() {
     try {
       const profile = await api.getProfile();
       setUserProfile(profile);
-      setPage('dashboard');
+      navigate('/');
     } catch {
-      setPage('dashboard');
+      navigate('/');
     }
   };
 
   const handleLogout = () => {
     api.logout();
     setUserProfile(null);
-    setPage('login');
+    navigate('/login');
   };
 
   const handleViewEvent = (eventId: string) => {
     setSelectedEventId(eventId);
-    setPage('eventDetails');
+    navigate(`/events/${eventId}`);
+  };
+
+  const handleNavigate = (page: string) => {
+    const routeMap: Record<string, string> = {
+      'dashboard': '/',
+      'myEvents': '/my-events',
+      'newEvent': '/new-event',
+      'publicEvents': '/public-events',
+      'myInvites': '/my-invites',
+      'profile': '/profile',
+      'settings': '/settings',
+      'history': '/history',
+    };
+    navigate(routeMap[page] || '/');
   };
 
   if (checkingAuth) {
-    return <div className="min-h-screen flex items-center justify-center text-neutral-500">Verificando autenticação...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center text-neutral-500">
+        Verificando autenticação...
+      </div>
+    );
   }
 
-  const isAuthenticated = api.isAuthenticated();
-
   return (
-    <ToastProvider>
-      {!isAuthenticated ? (
-        <>
-          {page === 'login' && (
+    <Routes>
+      {/* Rotas Públicas */}
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
             <LoginPage
               onLogin={handleLogin}
-              onNavigateToRegister={() => setPage('register')}
+              onNavigateToRegister={() => navigate('/register')}
             />
-          )}
-          {page === 'register' && (
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
             <RegisterPage
               onRegister={handleRegister}
-              onNavigateToLogin={() => setPage('login')}
+              onNavigateToLogin={() => navigate('/login')}
             />
-          )}
-        </>
-      ) : (
-        <Layout
-          currentPage={page}
-          onNavigate={(newPage) => setPage(newPage as Page)}
-          onLogout={handleLogout}
-          userName={userProfile?.name}
-        >
-          {page === 'dashboard' && <HomePage onViewEvent={handleViewEvent} />}
-          {page === 'myEvents' && <MyEventsPage onViewEvent={handleViewEvent} />}
-          {page === 'newEvent' && <NewEventPage onBack={() => setPage('myEvents')} />}
-          {page === 'publicEvents' && (
-            <PublicEventsPage
-              onBack={() => setPage('dashboard')}
-              onViewEvent={handleViewEvent}
-            />
-          )}
-          {page === 'myInvites' && (
-            <MyInvitesPage
-              onBack={() => setPage('dashboard')}
-              onViewEvent={handleViewEvent}
-            />
-          )}
-          {page === 'eventDetails' && selectedEventId && (
-            <EventDetailsPage
-              eventId={selectedEventId}
-              onBack={() => setPage('myEvents')}
-            />
-          )}
-          {page === 'guests' && selectedEventId && (
-            <GuestsPage
-              eventId={selectedEventId}
-              onBack={() => setPage('eventDetails')}
-            />
-          )}
-          {page === 'profile' && (
-            <ProfilePage
-              onBack={() => setPage('dashboard')}
-            />
-          )}
-          {page === 'settings' && (
-            <SettingsPage
-              onBack={() => setPage('dashboard')}
-            />
-          )}
-          {page === 'history' && (
-            <HistoryPage
-              onBack={() => setPage('dashboard')}
-              onViewEvent={handleViewEvent}
-            />
-          )}
-        </Layout>
-      )}
-    </ToastProvider>
+          </PublicRoute>
+        }
+      />
+
+      {/* Rotas Protegidas */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Layout
+              currentPage="dashboard"
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+              userName={userProfile?.name}
+            >
+              <HomePage onViewEvent={handleViewEvent} />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/my-events"
+        element={
+          <ProtectedRoute>
+            <Layout
+              currentPage="myEvents"
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+              userName={userProfile?.name}
+            >
+              <MyEventsPage onViewEvent={handleViewEvent} />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/new-event"
+        element={
+          <ProtectedRoute>
+            <Layout
+              currentPage="newEvent"
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+              userName={userProfile?.name}
+            >
+              <NewEventPage onBack={() => navigate('/my-events')} />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/public-events"
+        element={
+          <ProtectedRoute>
+            <Layout
+              currentPage="publicEvents"
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+              userName={userProfile?.name}
+            >
+              <PublicEventsPage
+                onBack={() => navigate('/')}
+                onViewEvent={handleViewEvent}
+              />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/my-invites"
+        element={
+          <ProtectedRoute>
+            <Layout
+              currentPage="myInvites"
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+              userName={userProfile?.name}
+            >
+              <MyInvitesPage
+                onBack={() => navigate('/')}
+                onViewEvent={handleViewEvent}
+              />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/events/:id"
+        element={
+          <ProtectedRoute>
+            <Layout
+              currentPage="eventDetails"
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+              userName={userProfile?.name}
+            >
+              <EventDetailsPage
+                eventId={selectedEventId || window.location.pathname.split('/').pop() || ''}
+                onBack={() => navigate('/my-events')}
+              />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/events/:id/guests"
+        element={
+          <ProtectedRoute>
+            <Layout
+              currentPage="guests"
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+              userName={userProfile?.name}
+            >
+              <GuestsPage
+                eventId={selectedEventId || ''}
+                onBack={() => navigate(-1)}
+              />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Layout
+              currentPage="profile"
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+              userName={userProfile?.name}
+            >
+              <ProfilePage onBack={() => navigate('/')} />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Layout
+              currentPage="settings"
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+              userName={userProfile?.name}
+            >
+              <SettingsPage onBack={() => navigate('/')} />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/history"
+        element={
+          <ProtectedRoute>
+            <Layout
+              currentPage="history"
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+              userName={userProfile?.name}
+            >
+              <HistoryPage
+                onBack={() => navigate('/')}
+                onViewEvent={handleViewEvent}
+              />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rota padrão - redireciona para home ou login */}
+      <Route
+        path="*"
+        element={<Navigate to={api.isAuthenticated() ? '/' : '/login'} replace />}
+      />
+    </Routes>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <ToastProvider>
+        <AppRoutes />
+      </ToastProvider>
+    </BrowserRouter>
   );
 }
 
