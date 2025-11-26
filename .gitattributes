@@ -1,0 +1,26 @@
+# Enforce Unix-style line endings for all text files
+* text=auto
+
+# YAML files should always use LF line endings
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Configuration files
+*.json text eol=lf
+*.md text eol=lf
+*.sh text eol=lf
+*.conf text eol=lf
+
+# Dockerfile
+Dockerfile text eol=lf
+
+# Source code files
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+
+# Prisma schema
+*.prisma text eol=lf

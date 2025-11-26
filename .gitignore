@@ -37,13 +37,6 @@ out/
 coverage/
 lcov-report/
 
-# Environment
-.env
-.env.*
-.env.local
-.env.test
-.env.production
-.envrc
 
 # Prisma
 prisma/dev.db

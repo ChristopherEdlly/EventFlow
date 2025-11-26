@@ -2,5 +2,8 @@
   "dependencies": {
     "clsx": "^2.1.1",
     "lucide-react": "^0.546.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.57.0"
   }
 }

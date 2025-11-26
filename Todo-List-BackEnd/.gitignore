@@ -1,9 +1,0 @@
-# See root .gitignore for common rules
-# Backend-specific ignores (kept minimal)
-
-# Prisma local dev DB
-prisma/dev.db
-prisma/*.sqlite
-
-# If you have additional backend-only artifacts, add them below
-
