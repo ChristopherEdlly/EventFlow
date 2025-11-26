@@ -43,6 +43,7 @@ async function bootstrap() {
     'http://localhost:3001',
     'http://localhost:3002',
     'http://localhost:8080',
+    'https://event-flow-rouge-one.vercel.app',
     process.env.CORS_ORIGIN,
   ].filter(Boolean);
 
