@@ -128,7 +128,7 @@ export class EventsController {
     });
 
     // Return events with guest status
-    return guests.map(guest => ({
+    return guests.map((guest: any) => ({
       ...guest.event,
       myGuestStatus: guest.status,
       myGuestId: guest.id,

@@ -205,7 +205,7 @@ export class AuthController {
         select: { id: true },
       });
 
-      const eventIds = userEvents.map(e => e.id);
+      const eventIds = userEvents.map((e: { id: string }) => e.id);
 
       // Delete all announcements from user's events
       if (eventIds.length > 0) {

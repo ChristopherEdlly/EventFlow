@@ -2,7 +2,22 @@
   "permissions": {
     "allow": [
       "Bash(curl:*)",
-      "Bash(node capture-main-pages.js:*)"
+      "Bash(node capture-main-pages.js:*)",
+      "Bash(npm run start:dev:*)",
+      "Bash(timeout /t 5)",
+      "Bash(npx prisma generate:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx prisma migrate:*)",
+      "Bash(npx playwright:*)",
+      "Bash(node:*)",
+      "Bash(tasklist:*)",
+      "Bash(npm run dev:*)",
+      "Bash(timeout /t 5 /nobreak)",
+      "Bash(ping:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

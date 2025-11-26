@@ -48,7 +48,7 @@ export class EventsArchiverService {
       const result = await this.prisma.event.updateMany({
         where: {
           id: {
-            in: eventsToArchive.map((e) => e.id),
+            in: eventsToArchive.map((e: { id: string }) => e.id),
           },
         },
         data: {
@@ -57,7 +57,7 @@ export class EventsArchiverService {
       });
 
       this.logger.log(
-        `Successfully archived ${result.count} events: ${eventsToArchive.map((e) => e.title).join(', ')}`,
+        `Successfully archived ${result.count} events: ${eventsToArchive.map((e: { title: string }) => e.title).join(', ')}`,
       );
     } catch (error) {
       this.logger.error('Error archiving events:', error);
