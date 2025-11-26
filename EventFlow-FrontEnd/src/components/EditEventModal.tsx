@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { eventsService, type Event, type UpdateEventDto } from '../services/events';
 import type { ApiError } from '../services/api';
 
@@ -20,12 +20,30 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
     try {
       await eventsService.updateEvent(event.id, formData);
       onSuccess();
@@ -40,7 +58,7 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div ref={modalRef} className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-neutral-900">Editar Evento</h2>
           <button
@@ -60,6 +78,7 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* ...existing code... */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
               Título do Evento *
@@ -73,7 +92,6 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
               placeholder="Ex: Festa de Aniversário"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
               Descrição
@@ -86,7 +104,6 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
               placeholder="Descreva seu evento..."
             />
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">
@@ -100,7 +117,6 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
                 className="w-full px-4 py-3 bg-white text-neutral-900 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Horário
@@ -113,7 +129,6 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
               />
             </div>
           </div>
-
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
               Local
@@ -126,7 +141,6 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
               placeholder="Endereço do evento"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
               Visibilidade
@@ -140,7 +154,6 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
               <option value="PRIVATE">Privado - Apenas convidados</option>
             </select>
           </div>
-
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
               Capacidade (opcional)
@@ -154,7 +167,6 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
               placeholder="Número máximo de pessoas"
             />
           </div>
-
           <div className="flex gap-3 pt-4">
             <button
               type="button"

@@ -353,10 +353,9 @@ export default function DashboardPage({ onLogout, onNavigateToPublicEvents, onNa
     return actions;
   };
 
-  // Função para abrir modal de criar evento com data pré-selecionada
+  // Função para abrir página de criar evento com data pré-selecionada
   const handleDayClick = (date: Date) => {
-    setSelectedDate(date);
-    setShowCreateModal(true);
+    window.location.href = `/new-event?date=${date.toISOString()}`;
   };
 
   return (
@@ -370,28 +369,19 @@ export default function DashboardPage({ onLogout, onNavigateToPublicEvents, onNa
             onDayClick={handleDayClick}
           />
           {/* Botão flutuante de acessibilidade para criar evento */}
-          <button
+          <a
+            href="/new-event"
             className="fixed bottom-8 right-8 z-50 bg-primary-600 text-white rounded-full shadow-lg w-16 h-16 flex items-center justify-center text-3xl font-bold hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-300"
             title="Criar novo evento"
             aria-label="Criar novo evento"
-            onClick={() => setShowCreateModal(true)}
+            style={{ cursor: 'pointer' }}
           >
             +
-          </button>
+          </a>
         </div>
       </main>
 
-      {/* Modal de criar evento com data pré-selecionada */}
-      {showCreateModal && (
-        <EventFormModal
-          onClose={() => {
-            setShowCreateModal(false);
-            setSelectedDate(null);
-          }}
-          onSuccess={loadEvents}
-          initialDate={selectedDate}
-        />
-      )}
+      {/* Modal de criar evento removido, agora usa página dedicada */}
       {/* ...modais de edição, exclusão e alteração de estado podem ser mantidos conforme necessário... */}
     </div>
   );

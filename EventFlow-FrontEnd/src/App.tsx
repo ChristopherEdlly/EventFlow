@@ -15,7 +15,7 @@ import HistoryPage from './pages/HistoryPage';
 import MyEventsPage from './pages/MyEventsPage';
 import NewEventPage from './pages/NewEventPage';
 import GuestsPage from './pages/GuestsPage';
-import SettingsPage from './pages/SettingsPage';
+
 
 interface UserProfile {
   id: string;
@@ -296,21 +296,7 @@ function AppRoutes() {
         }
       />
 
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute>
-            <Layout
-              currentPage="settings"
-              onNavigate={handleNavigate}
-              onLogout={handleLogout}
-              userName={userProfile?.name}
-            >
-              <SettingsPage onBack={() => navigate('/')} />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
+
 
       <Route
         path="/history"

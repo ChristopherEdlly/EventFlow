@@ -55,15 +55,17 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
 
   return (
     <div>
-      {/* Breadcrumb */}
+      {/* Botão de voltar igual ao header de detalhes */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-          <button onClick={onBack} className="hover:text-primary-600">
-            Eventos
-          </button>
-          <span>/</span>
-          <span className="text-gray-900">Novo Evento</span>
-        </div>
+        <button
+          onClick={onBack}
+          className="mb-4 inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-primary-100 backdrop-blur-sm text-primary-700 rounded-xl transition-all duration-200 group border border-primary-200"
+        >
+          <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          <span className="font-medium">Voltar</span>
+        </button>
         <h1 className="text-2xl font-bold text-gray-900">Cadastrar Novo Evento</h1>
         <p className="text-gray-600 mt-1">Preencha os detalhes abaixo para criar um novo evento.</p>
       </div>
