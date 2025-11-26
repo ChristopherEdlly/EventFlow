@@ -29,8 +29,8 @@ export default function ActivityTimeline({ events, onEventClick }: ActivityTimel
         description: `Evento "${event.title}" criado`,
       });
 
-      // Atividade baseada no estado
-      if (event.state === 'PUBLISHED') {
+      // Atividade baseada na disponibilidade
+      if (event.availability === 'PUBLISHED') {
         acts.push({
           id: `${event.id}-published`,
           type: 'published',
@@ -38,7 +38,7 @@ export default function ActivityTimeline({ events, onEventClick }: ActivityTimel
           timestamp: new Date(event.date),
           description: `Evento "${event.title}" publicado`,
         });
-      } else if (event.state === 'CANCELLED') {
+      } else if (event.availability === 'CANCELLED') {
         acts.push({
           id: `${event.id}-cancelled`,
           type: 'cancelled',
@@ -46,7 +46,7 @@ export default function ActivityTimeline({ events, onEventClick }: ActivityTimel
           timestamp: new Date(event.date),
           description: `Evento "${event.title}" cancelado`,
         });
-      } else if (event.state === 'COMPLETED') {
+      } else if (event.availability === 'COMPLETED') {
         acts.push({
           id: `${event.id}-completed`,
           type: 'completed',

@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { eventsService } from '../services/events';
 import type { ApiError } from '../services/api';
+import PageHeader from '../components/PageHeader';
 
 interface NewEventPageProps {
   onBack: () => void;
 }
 
 export default function NewEventPage({ onBack }: NewEventPageProps) {
+    const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -14,6 +17,8 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
     date: '',
     endDate: '',
     location: '',
+    time: '',
+    endTime: '',
     state: 'DRAFT' as const,
     visibility: 'PUBLIC' as const,
   });
@@ -36,10 +41,12 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
         title: formData.title,
         description: formData.description,
         date: formData.date,
+        endDate: formData.endDate || undefined,
+        time: formData.time || undefined,
+        endTime: formData.endTime || undefined,
         location: formData.location,
         visibility: formData.visibility,
       });
-
       onBack();
     } catch (err) {
       const apiError = err as ApiError;
@@ -55,20 +62,17 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
 
   return (
     <div>
-      {/* Botão de voltar igual ao header de detalhes */}
-      <div className="mb-6">
-        <button
-          onClick={onBack}
-          className="mb-4 inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-primary-100 backdrop-blur-sm text-primary-700 rounded-xl transition-all duration-200 group border border-primary-200"
-        >
-          <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      {/* Header */}
+      <PageHeader
+        title="Cadastrar Novo Evento"
+        subtitle="Preencha os detalhes abaixo para criar um novo evento"
+        icon={
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          <span className="font-medium">Voltar</span>
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900">Cadastrar Novo Evento</h1>
-        <p className="text-gray-600 mt-1">Preencha os detalhes abaixo para criar um novo evento.</p>
-      </div>
+        }
+        onBack={onBack}
+      />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -146,7 +150,6 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
                 required
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Data e Hora de Fim
@@ -156,6 +159,7 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
                 value={formData.endDate}
                 onChange={(e) => handleChange('endDate', e.target.value)}
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Opcional"
               />
             </div>
           </div>
@@ -189,22 +193,6 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
           <h2 className="text-lg font-semibold text-gray-900 mb-6">Gerenciamento</h2>
 
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
-              </label>
-              <select
-                value={formData.state}
-                onChange={(e) => handleChange('state', e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="DRAFT">Planejado</option>
-                <option value="PUBLISHED">Publicado</option>
-                <option value="CANCELLED">Cancelado</option>
-                <option value="COMPLETED">Concluído</option>
-              </select>
-              <p className="text-xs text-red-600 mt-1">Este campo é obrigatório.</p>
-            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -241,12 +229,12 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
         {/* Action Buttons */}
         <div className="flex items-center justify-end gap-3">
           <button
-            type="button"
-            onClick={onBack}
-            className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Cancelar
-          </button>
+              type="button"
+              onClick={() => navigate(-1)}
+              className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Cancelar
+            </button>
           <button
             type="submit"
             disabled={isSaving}

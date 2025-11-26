@@ -81,11 +81,8 @@ export function generateICalContent(event: Event): string {
     lines.push(`LOCATION:${escapeICalText(event.location)}`);
   }
 
-  // Add status based on event state
-  const status = event.state === 'CANCELLED' ? 'CANCELLED' :
-                 event.state === 'COMPLETED' ? 'CONFIRMED' :
-                 'CONFIRMED';
-  lines.push(`STATUS:${status}`);
+  // Status fixo: CONFIRMED (campo state removido do backend)
+  lines.push('STATUS:CONFIRMED');
 
   lines.push('END:VEVENT');
   lines.push('END:VCALENDAR');

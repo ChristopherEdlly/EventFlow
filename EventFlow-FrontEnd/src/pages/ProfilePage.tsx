@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import type { ApiError } from '../services/api';
 import Toast from '../components/Toast';
+import PageHeader from '../components/PageHeader';
 
 interface ProfilePageProps {
   onBack: () => void;
@@ -201,22 +202,18 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
   if (!profile) return null;
 
   return (
-    <div className="min-h-screen bg-neutral-50 py-8">
+    <div>
+      <PageHeader
+        title="Perfil"
+        subtitle="Gerencie suas informações pessoais"
+        icon={
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        }
+      />
+
       <div className="max-w-2xl mx-auto px-4">
-        {/* Header */}
-        <div className="mb-6">
-          <button
-            onClick={onBack}
-            className="text-neutral-600 hover:text-neutral-900 flex items-center gap-2 mb-4"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Voltar
-          </button>
-          <h1 className="text-3xl font-bold text-neutral-900">Meu Perfil</h1>
-          <p className="text-neutral-600 mt-1">Gerencie suas informações pessoais</p>
-        </div>
 
         {/* Profile Info Card */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">

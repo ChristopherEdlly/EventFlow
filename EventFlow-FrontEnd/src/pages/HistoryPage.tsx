@@ -13,7 +13,7 @@ export default function HistoryPage({ onBack, onViewEvent }: HistoryPageProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filterState, setFilterState] = useState<'ALL' | 'COMPLETED' | 'CANCELLED' | 'ARCHIVED'>('ALL');
+  const [filterAvailability, setFilterAvailability] = useState<'ALL' | 'PUBLISHED' | 'COMPLETED' | 'CANCELLED'>('ALL');
   const [sortBy, setSortBy] = useState<'date' | 'title'>('date');
 
   useEffect(() => {
@@ -24,10 +24,8 @@ export default function HistoryPage({ onBack, onViewEvent }: HistoryPageProps) {
     try {
       setIsLoading(true);
       const data = await eventsService.getMyEvents();
-      // Filter only historical events (COMPLETED, CANCELLED, ARCHIVED)
-      const historicalEvents = data.filter(e =>
-        ['COMPLETED', 'CANCELLED', 'ARCHIVED'].includes(e.state)
-      );
+      // Filtrar apenas eventos concluídos ou arquivados
+      const historicalEvents = data.filter(e => ['COMPLETED', 'CANCELLED'].includes(e.availability));
       setEvents(historicalEvents);
     } catch (err) {
       const apiError = err as ApiError;
@@ -41,16 +39,16 @@ export default function HistoryPage({ onBack, onViewEvent }: HistoryPageProps) {
   const filteredEvents = useMemo(() => {
     let filtered = events;
 
-    // Filter by state
-    if (filterState !== 'ALL') {
-      filtered = filtered.filter(e => e.state === filterState);
+    // Filtrar por disponibilidade
+    if (filterAvailability !== 'ALL') {
+      filtered = filtered.filter(e => e.availability === filterAvailability);
     }
 
-    // Sort
+    // Ordenar
     filtered = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'date':
-          return new Date(b.date).getTime() - new Date(a.date).getTime(); // Most recent first
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
         case 'title':
           return a.title.localeCompare(b.title);
         default:
@@ -59,16 +57,16 @@ export default function HistoryPage({ onBack, onViewEvent }: HistoryPageProps) {
     });
 
     return filtered;
-  }, [events, filterState, sortBy]);
+  }, [events, filterAvailability, sortBy]);
 
   const getStateColor = (state: string) => {
     switch (state) {
       case 'COMPLETED':
         return 'bg-success-100 text-success-700 border-success-200';
       case 'CANCELLED':
-        return 'bg-error-100 text-error-700 border-error-200';
-      case 'ARCHIVED':
-        return 'bg-neutral-200 text-neutral-600 border-neutral-300';
+        return 'bg-red-100 text-red-700 border-red-300';
+      case 'PUBLISHED':
+        return 'bg-primary-100 text-primary-700 border-primary-200';
       default:
         return 'bg-neutral-100 text-neutral-700 border-neutral-200';
     }
@@ -80,8 +78,8 @@ export default function HistoryPage({ onBack, onViewEvent }: HistoryPageProps) {
         return 'Concluído';
       case 'CANCELLED':
         return 'Cancelado';
-      case 'ARCHIVED':
-        return 'Arquivado';
+      case 'PUBLISHED':
+        return 'Publicado';
       default:
         return state;
     }
@@ -97,14 +95,14 @@ export default function HistoryPage({ onBack, onViewEvent }: HistoryPageProps) {
         );
       case 'CANCELLED':
         return (
-          <svg className="w-5 h-5 text-error-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         );
-      case 'ARCHIVED':
+      case 'PUBLISHED':
         return (
-          <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+          <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         );
       default:
@@ -114,9 +112,9 @@ export default function HistoryPage({ onBack, onViewEvent }: HistoryPageProps) {
 
   const stats = {
     total: events.length,
-    completed: events.filter(e => e.state === 'COMPLETED').length,
-    cancelled: events.filter(e => e.state === 'CANCELLED').length,
-    archived: events.filter(e => e.state === 'ARCHIVED').length,
+    completed: events.filter(e => e.availability === 'COMPLETED').length,
+    cancelled: events.filter(e => e.availability === 'CANCELLED').length,
+    published: events.filter(e => e.availability === 'PUBLISHED').length,
   };
 
   const formatDate = (dateString: string) => {
@@ -158,13 +156,10 @@ export default function HistoryPage({ onBack, onViewEvent }: HistoryPageProps) {
             <div className="text-sm text-success-600 font-medium">Concluídos</div>
             <div className="text-3xl font-bold text-success-700 mt-1">{stats.completed}</div>
           </div>
-          <div className="bg-error-50 rounded-lg p-4 border border-error-200 shadow-sm">
-            <div className="text-sm text-error-600 font-medium">Cancelados</div>
-            <div className="text-3xl font-bold text-error-700 mt-1">{stats.cancelled}</div>
-          </div>
-          <div className="bg-neutral-100 rounded-lg p-4 border border-neutral-300 shadow-sm">
-            <div className="text-sm text-neutral-500 font-medium">Arquivados</div>
-            <div className="text-3xl font-bold text-neutral-700 mt-1">{stats.archived}</div>
+          {/* Cancelados removido do sistema de disponibilidade */}
+          <div className="bg-red-50 rounded-lg p-4 border border-red-200 shadow-sm">
+            <div className="text-sm text-red-600 font-medium">Cancelados</div>
+            <div className="text-3xl font-bold text-red-700 mt-1">{stats.cancelled}</div>
           </div>
         </div>
 
@@ -172,9 +167,9 @@ export default function HistoryPage({ onBack, onViewEvent }: HistoryPageProps) {
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="flex gap-2 flex-wrap">
             <button
-              onClick={() => setFilterState('ALL')}
+              onClick={() => setFilterAvailability('ALL')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                filterState === 'ALL'
+                filterAvailability === 'ALL'
                   ? 'bg-primary-600 text-white'
                   : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-300'
               }`}
@@ -182,9 +177,19 @@ export default function HistoryPage({ onBack, onViewEvent }: HistoryPageProps) {
               Todos ({stats.total})
             </button>
             <button
-              onClick={() => setFilterState('COMPLETED')}
+              onClick={() => setFilterAvailability('PUBLISHED')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                filterState === 'COMPLETED'
+                filterAvailability === 'PUBLISHED'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-primary-50 text-primary-700 hover:bg-primary-100 border border-primary-200'
+              }`}
+            >
+              Publicados ({stats.published})
+            </button>
+            <button
+              onClick={() => setFilterAvailability('COMPLETED')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                filterAvailability === 'COMPLETED'
                   ? 'bg-success-600 text-white'
                   : 'bg-success-50 text-success-700 hover:bg-success-100 border border-success-200'
               }`}
@@ -192,24 +197,14 @@ export default function HistoryPage({ onBack, onViewEvent }: HistoryPageProps) {
               Concluídos ({stats.completed})
             </button>
             <button
-              onClick={() => setFilterState('CANCELLED')}
+              onClick={() => setFilterAvailability('CANCELLED')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                filterState === 'CANCELLED'
-                  ? 'bg-error-600 text-white'
-                  : 'bg-error-50 text-error-700 hover:bg-error-100 border border-error-200'
+                filterAvailability === 'CANCELLED'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
               }`}
             >
               Cancelados ({stats.cancelled})
-            </button>
-            <button
-              onClick={() => setFilterState('ARCHIVED')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                filterState === 'ARCHIVED'
-                  ? 'bg-neutral-600 text-white'
-                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200 border border-neutral-300'
-              }`}
-            >
-              Arquivados ({stats.archived})
             </button>
           </div>
 
@@ -233,9 +228,9 @@ export default function HistoryPage({ onBack, onViewEvent }: HistoryPageProps) {
             }
             title="Nenhum evento no histórico"
             description={
-              filterState === 'ALL'
-                ? 'Eventos concluídos, cancelados ou arquivados aparecerão aqui'
-                : `Nenhum evento ${getStateLabel(filterState).toLowerCase()} encontrado`
+              filterAvailability === 'ALL'
+                ? 'Eventos publicados, concluídos ou arquivados aparecerão aqui'
+                : `Nenhum evento ${getStateLabel(filterAvailability).toLowerCase()} encontrado`
             }
           />
         ) : (
@@ -249,15 +244,15 @@ export default function HistoryPage({ onBack, onViewEvent }: HistoryPageProps) {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        {getStateIcon(event.state)}
+                        {getStateIcon(event.availability)}
                         <h3 className="text-lg font-semibold text-neutral-900">{event.title}</h3>
                       </div>
                       {event.description && (
                         <p className="text-neutral-600 text-sm line-clamp-2">{event.description}</p>
                       )}
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${getStateColor(event.state)}`}>
-                      {getStateLabel(event.state)}
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${getStateColor(event.availability)}`}>
+                      {getStateLabel(event.availability)}
                     </span>
                   </div>
 

@@ -236,7 +236,7 @@ export default function GuestsPage({ eventId, onBack }: GuestsPageProps) {
                     <div className="text-sm text-gray-600">{guest.email}</div>
                   </td>
                   <td className="px-6 py-4">
-                    {getStatusBadge(guest.status)}
+                    {}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">

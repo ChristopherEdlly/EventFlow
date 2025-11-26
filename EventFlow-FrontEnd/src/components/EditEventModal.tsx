@@ -12,12 +12,18 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
   const [formData, setFormData] = useState<UpdateEventDto>({
     title: event.title,
     description: event.description || '',
-    date: new Date(event.date).toISOString().split('T')[0],
+    date: event.date ? new Date(event.date).toISOString().slice(0, 16) : '',
     time: event.time || '',
+    endDate: event.endDate ? new Date(event.endDate).toISOString().slice(0, 16) : undefined,
+    endTime: event.endTime || undefined,
     location: event.location || '',
     visibility: event.visibility,
     capacity: event.capacity || undefined,
+    waitlistEnabled: event.waitlistEnabled || false,
+    showGuestList: event.showGuestList || false,
+    timezone: event.timezone || '',
   });
+  const [status, setStatus] = useState(event.availability || 'PUBLISHED');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
@@ -70,6 +76,41 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
             </svg>
           </button>
         </div>
+        {/* Status atual do evento */}
+        <div className="mb-4">
+          <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold
+            ${status === 'PUBLISHED' ? 'bg-emerald-100 text-emerald-700' :
+              status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+              status === 'COMPLETED' ? 'bg-gray-100 text-gray-700' :
+              'bg-gray-50 text-gray-500'}
+          `}>
+            {status === 'PUBLISHED' ? 'Publicado' :
+              status === 'CANCELLED' ? 'Cancelado' :
+              status === 'COMPLETED' ? 'Concluído' :
+              'Indefinido'}
+          </span>
+          {status === 'PUBLISHED' && (
+            <button
+              type="button"
+              className="ml-4 px-3 py-1 rounded bg-red-100 text-red-700 text-xs font-semibold hover:bg-red-200 transition"
+              onClick={async () => {
+                setIsLoading(true);
+                try {
+                  await eventsService.updateEvent(event.id, { availability: 'CANCELLED' });
+                  setStatus('CANCELLED');
+                  onSuccess();
+                } catch (err) {
+                  setError('Erro ao cancelar evento');
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              disabled={isLoading}
+            >
+              Cancelar Evento
+            </button>
+          )}
+        </div>
 
         {error && (
           <div className="mb-4 p-4 bg-error-50 border border-error-200 rounded-lg">
@@ -78,6 +119,38 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                        Fuso horário
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.timezone}
+                        onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+                        className="w-full px-4 py-3 bg-white text-neutral-900 placeholder-neutral-400 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                        placeholder="Ex: America/Sao_Paulo"
+                      />
+                    </div>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.waitlistEnabled}
+                          onChange={(e) => setFormData({ ...formData, waitlistEnabled: e.target.checked })}
+                          className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                        />
+                        <span className="text-sm text-neutral-700">Permitir lista de espera</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.showGuestList}
+                          onChange={(e) => setFormData({ ...formData, showGuestList: e.target.checked })}
+                          className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                        />
+                        <span className="text-sm text-neutral-700">Mostrar lista de convidados</span>
+                      </label>
+                    </div>
           {/* ...existing code... */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
@@ -107,10 +180,10 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Data *
+                Data e Hora de Início *
               </label>
               <input
-                type="date"
+                type="datetime-local"
                 required
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -119,13 +192,14 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
             </div>
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Horário
+                Data e Hora de Fim
               </label>
               <input
-                type="time"
-                value={formData.time}
-                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                type="datetime-local"
+                value={formData.endDate || ''}
+                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                 className="w-full px-4 py-3 bg-white text-neutral-900 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                placeholder="Opcional"
               />
             </div>
           </div>

@@ -21,7 +21,10 @@
       "Bash(npx tsc:*)",
       "Bash(awk:*)",
       "Bash(cat:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { eventsService, type Event, type GuestStatus } from '../services/events';
 import type { ApiError } from '../services/api';
 import EmptyState from '../components/EmptyState';
+import PageHeader from '../components/PageHeader';
 
 interface MyInvitesPageProps {
   onBack: () => void;
@@ -97,57 +98,61 @@ export default function MyInvitesPage({ onBack, onViewEvent }: MyInvitesPageProp
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-100">
-      {/* ...existing code... */}
+    <div>
+      <PageHeader
+        title="Meus Convites"
+        subtitle="Convites recebidos para participar de eventos"
+        icon={
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        }
+      />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {error && (
-          <div className="mb-6 p-4 bg-error-50 border border-error-200 rounded-lg">
-            <p className="text-sm text-error-800">{error}</p>
-          </div>
-        )}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
+      )}
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <svg className="animate-spin h-12 w-12 text-primary-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <p className="text-neutral-600">Carregando convites...</p>
-            </div>
-          </div>
-        ) : invites.length === 0 ? (
-          <EmptyState
-            title="Nenhum convite pendente"
-            description="Quando você receber convites, eles aparecerão aqui"
-            icon={
-              <svg className="w-10 h-10 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            }
-          />
-        ) : (
-          <div className="space-y-4">
-            {invites.map((event) => (
-              <div
-                key={event.id}
-                className="bg-white rounded-xl shadow-md border border-neutral-200 p-6"
-              >
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-neutral-900">
-                        {event.title}
-                      </h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(event.myGuestStatus)}`}>
-                        {getStatusLabel(event.myGuestStatus)}
-                      </span>
-                    </div>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <svg className="animate-spin h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+      ) : invites.length === 0 ? (
+        <EmptyState
+          title="Nenhum convite pendente"
+          description="Quando você receber convites, eles aparecerão aqui"
+          icon={
+            <svg className="w-10 h-10 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          }
+        />
+      ) : (
+        <div className="space-y-4">
+          {invites.map((event) => (
+            <div
+              key={event.id}
+              className="bg-white rounded-xl shadow-md border border-gray-200 p-6"
+            >
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {event.title}
+                    </h3>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(event.myGuestStatus)}`}>
+                      {getStatusLabel(event.myGuestStatus)}
+                    </span>
+                  </div>
 
-                    {event.description && (
-                      <p className="text-neutral-600 text-sm mb-3">
-                        {event.description}
+                  {event.description && (
+                    <p className="text-gray-600 text-sm mb-3">
+                      {event.description}
                       </p>
                     )}
 
@@ -280,8 +285,8 @@ export default function MyInvitesPage({ onBack, onViewEvent }: MyInvitesPageProp
               </div>
             ))}
           </div>
-        )}
-      </main>
+        )
+      }
 
       {/* Decline Modal */}
       {showDeclineModal && (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { eventsService, type Event } from '../services/events';
 import { api, type ApiError } from '../services/api';
+import PageHeader from '../components/PageHeader';
 
 interface HomePageProps {
   onViewEvent: (eventId: string) => void;
@@ -30,7 +31,7 @@ export default function HomePage({ onViewEvent }: HomePageProps) {
       // Load upcoming events
       const allEvents = await eventsService.getMyEvents();
       const upcoming = allEvents
-        .filter(e => new Date(e.date) > new Date() && e.state === 'PUBLISHED')
+        .filter(e => new Date(e.date) > new Date() && e.availability === 'PUBLISHED')
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
         .slice(0, 3);
       setEvents(upcoming);
@@ -68,10 +69,15 @@ export default function HomePage({ onViewEvent }: HomePageProps) {
   return (
     <div>
       {/* Welcome Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Olá, {userName}!</h1>
-        <p className="text-gray-600 mt-1">Bem-vindo de volta ao EventFlow</p>
-      </div>
+      <PageHeader
+        title={`Olá, ${userName}!`}
+        subtitle="Bem-vindo de volta ao EventFlow"
+        icon={
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+        }
+      />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">

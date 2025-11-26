@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { eventsService, type Event, type Guest, type EventState } from '../services/events';
+import { eventsService, type Event, type Guest } from '../services/events';
 import { api } from '../services/api';
 import EditEventModal from '../components/EditEventModal';
 
@@ -137,21 +137,80 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
                 }`}>
                 {event.visibility === 'PUBLIC' ? '🌐 Público' : '🔒 Privado'}
               </span>
-              <span className={`px-4 py-2 rounded-xl text-sm font-semibold shadow-md backdrop-blur-sm ${event.state === 'PUBLISHED' ? 'bg-emerald-500/90 text-white' :
-                  event.state === 'DRAFT' ? 'bg-gray-500/90 text-white' :
-                    event.state === 'CANCELLED' ? 'bg-red-500/90 text-white' :
-                      'bg-blue-500/90 text-white'
+              <span className={`px-4 py-2 rounded-xl text-sm font-semibold shadow-md backdrop-blur-sm ${event.availability === 'PUBLISHED' ? 'bg-emerald-500/90 text-white' :
+                  event.availability === 'CANCELLED' ? 'bg-red-500/90 text-white' :
+                    event.availability === 'COMPLETED' ? 'bg-gray-500/90 text-white' :
+                      'bg-gray-400/90 text-white'
                 }`}>
-                {event.state === 'PUBLISHED' ? '✓ Publicado' :
-                  event.state === 'DRAFT' ? '📝 Rascunho' :
-                    event.state === 'CANCELLED' ? '✕ Cancelado' :
-                      event.state === 'COMPLETED' ? '✓ Concluído' :
-                        '📦 Arquivado'}
+                {event.availability === 'PUBLISHED' ? '✓ Publicado' :
+                  event.availability === 'CANCELLED' ? '✕ Cancelado' :
+                    event.availability === 'COMPLETED' ? '✓ Concluído' :
+                      'Indefinido'}
               </span>
             </div>
           </div>
 
-          {/* ...existing code... (header já contém todas as informações principais) */}
+          {/* Info Cards - Data, Local, Participantes */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            {/* Data e Hora */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Data e Hora</p>
+                  <p className="text-white font-semibold mt-1 truncate">
+                    {new Date(event.date).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric'
+                    })}
+                  </p>
+                  {event.time && <p className="text-white/90 text-sm">{event.time}</p>}
+                </div>
+              </div>
+            </div>
+
+            {/* Local */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Local</p>
+                  <p className="text-white font-semibold mt-1 truncate" title={event.location || undefined}>
+                    {event.location || 'A definir'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Participantes */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Participantes</p>
+                  <p className="text-white font-semibold mt-1">
+                    {guests.filter(g => g.status === 'YES').length}
+                    {event.capacity && <span className="text-white/70"> / {event.capacity}</span>}
+                  </p>
+                  {!event.capacity && <p className="text-white/70 text-sm">confirmados</p>}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -191,23 +250,21 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
               <div>
                 <label className="text-xs text-gray-600 block mb-1">Mudar Status</label>
                 <select
-                  value={event.state}
+                  value={event.availability}
                   onChange={async (e) => {
-                    const newState = e.target.value as EventState;
-                    try {
-                      await eventsService.updateEvent(eventId, { state: newState });
-                      await loadData();
-                    } catch (err) {
-                      alert('Erro ao atualizar status');
+                    const newAvailability = e.target.value as 'CANCELLED';
+                    if (newAvailability === 'CANCELLED') {
+                      try {
+                        await eventsService.updateEvent(eventId, { availability: newAvailability });
+                        await loadData();
+                      } catch (err) {
+                        alert('Erro ao cancelar evento');
+                      }
                     }
                   }}
                   className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
-                  <option value="DRAFT">📝 Rascunho</option>
-                  <option value="PUBLISHED">✓ Publicado</option>
-                  <option value="CANCELLED">✕ Cancelado</option>
-                  <option value="COMPLETED">✓ Concluído</option>
-                  <option value="ARCHIVED">📦 Arquivado</option>
+                  <option value="CANCELLED">✕ Cancelar Evento</option>
                 </select>
               </div>
             </div>
@@ -215,27 +272,8 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
         </div>
       )}
 
-      {/* Debug Info - Remover depois de testar */}
-      {!isOwner && (
-        <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <p className="text-sm font-semibold text-yellow-800 mb-2">🔍 Debug - Condições do Botão de Inscrição:</p>
-          <div className="text-xs text-yellow-700 space-y-1">
-            <p>• isOwner: <strong>{isOwner ? 'true (é dono)' : 'false (não é dono) ✓'}</strong></p>
-            <p>• visibility: <strong>{event.visibility}</strong> {event.visibility === 'PUBLIC' ? '✓' : '✗ (precisa ser PUBLIC)'}</p>
-            <p>• state: <strong>{event.state}</strong> {event.state === 'PUBLISHED' ? '✓' : '✗ (precisa ser PUBLISHED)'}</p>
-            <p>• currentUserEmail: <strong>{currentUserEmail || 'não carregado'}</strong></p>
-            <p>• currentUserGuest: <strong>{currentUserGuest ? `inscrito (${currentUserGuest.status})` : 'não inscrito'}</strong></p>
-            <p className="pt-2 mt-2 border-t border-yellow-300">
-              <strong>Resultado:</strong> {!isOwner && event.visibility === 'PUBLIC' && event.state === 'PUBLISHED'
-                ? '✓ Botão deve aparecer'
-                : '✗ Botão não aparece'}
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Botão de inscrição/status para não-dono */}
-      {!isOwner && event.visibility === 'PUBLIC' && event.state === 'PUBLISHED' && (
+      {!isOwner && event.visibility === 'PUBLIC' && event.availability === 'PUBLISHED' && (
         <div className="mb-6 bg-white rounded-lg border border-gray-200 p-6 shadow-md">
           {currentUserGuest ? (
             // Usuário já está inscrito - mostrar status

@@ -24,6 +24,7 @@ const EventCreateSchema = z.object({
   time: z.string().optional(),
   location: z.string().optional(),
   visibility: z.enum(['PUBLIC', 'PRIVATE']).optional(),
+  availability: z.enum(['PUBLISHED', 'ARCHIVED', 'COMPLETED']).optional(),
   capacity: z.number().int().positive().nullable().optional(),
   allowWaitlist: z.boolean().optional(),
   requireApproval: z.boolean().optional(),
@@ -36,7 +37,6 @@ const EventUpdateSchema = z.object({
   time: z.string().min(1).optional(),
   location: z.string().min(1).optional(),
   visibility: z.enum(['PUBLIC', 'PRIVATE']).optional(),
-  state: z.enum(['DRAFT', 'PUBLISHED', 'CANCELLED', 'COMPLETED', 'ARCHIVED']).optional(),
   rsvpDeadline: z.string().optional().nullable(),
   capacity: z.number().int().positive().nullable().optional(),
   waitlistEnabled: z.boolean().optional(),
@@ -45,6 +45,7 @@ const EventUpdateSchema = z.object({
   notifyGuests: z.boolean().optional(),
   cancelledReason: z.string().optional().nullable(),
   revision: z.number().int().optional(),
+  availability: z.enum(['PUBLISHED', 'ARCHIVED', 'COMPLETED', 'CANCELLED']).optional(),
 });
 
 @Controller('events')
@@ -55,19 +56,27 @@ export class EventsController {
   @Get()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getAllEvents(@Req() req: any) {
-    const uid = req.user?.userId;
-    // Return PUBLIC events that are DRAFT or PUBLISHED (not CANCELLED/ARCHIVED)
+    // Retorna todos eventos públicos disponíveis (PUBLISHED)
     const events = await this.prisma.event.findMany({
       where: {
         visibility: 'PUBLIC',
-        state: {
-          in: ['DRAFT', 'PUBLISHED'],
-        },
+        availability: 'PUBLISHED',
       },
-      include: {
-        _count: {
-          select: { guests: true },
-        },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        date: true,
+        time: true,
+        location: true,
+        visibility: true,
+        availability: true,
+        capacity: true,
+        waitlistEnabled: true,
+        showGuestList: true,
+        timezone: true,
+        ownerId: true,
+        createdAt: true,
       },
       orderBy: { date: 'asc' },
     });
@@ -85,10 +94,21 @@ export class EventsController {
       where: {
         ownerId: uid,
       },
-      include: {
-        _count: {
-          select: { guests: true },
-        },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        date: true,
+        time: true,
+        location: true,
+        visibility: true,
+        availability: true,
+        capacity: true,
+        waitlistEnabled: true,
+        showGuestList: true,
+        timezone: true,
+        ownerId: true,
+        createdAt: true,
       },
       orderBy: { date: 'asc' },
     });
@@ -145,8 +165,9 @@ export class EventsController {
     const parsed = EventCreateSchema.safeParse(body);
     if (!parsed.success) throw new BadRequestException(parsed.error.flatten());
 
-    const { title, description, date, time, location, visibility, capacity, allowWaitlist, requireApproval } = parsed.data;
+    const { title, description, date, time, location, visibility, availability, capacity, allowWaitlist, requireApproval } = parsed.data;
 
+    // Se não especificado, eventos públicos começam como 'PUBLISHED', privados não aparecem na lista pública
     const event = await this.prisma.event.create({
       data: {
         title,
@@ -155,7 +176,7 @@ export class EventsController {
         time: time || '',
         location: location || '',
         visibility: visibility || 'PRIVATE',
-        state: 'DRAFT',
+        availability: availability || (visibility === 'PUBLIC' ? 'PUBLISHED' : 'COMPLETED'),
         capacity: capacity || null,
         waitlistEnabled: allowWaitlist || false,
         showGuestList: requireApproval || false,
@@ -178,7 +199,10 @@ export class EventsController {
     const uid = req.user?.userId;
     const event = await this.prisma.event.findUnique({
       where: { id },
-      include: { guests: true, owner: { select: { id: true, email: true } } },
+      include: {
+        guests: true,
+        owner: true,
+      },
     });
     if (!event) throw new NotFoundException('Not found');
     if (event.visibility === 'PRIVATE') {
@@ -219,52 +243,65 @@ export class EventsController {
       time,
       location,
       visibility,
-      state,
       rsvpDeadline,
       capacity,
       waitlistEnabled,
       showGuestList,
       timezone,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       notifyGuests,
       cancelledReason,
+      // availability removido, pois é controlado por newAvailability
     } = parsed.data;
-    if (['CANCELLED', 'COMPLETED', 'ARCHIVED'].includes(existing.state)) {
-      const updated = await this.prisma.event.update({
-        where: { id },
-        data: { description: description ?? undefined, showGuestList },
-        include: { guests: true },
-      });
-      // await recordAudit(id, "EVENT_EDIT_READONLY", JSON.stringify({ description: !!description, showGuestList }), uid);
-      return updated;
-    }
-    const nextState = state ?? existing.state;
-    const nextDate = date ? new Date(date) : existing.date;
-    if (nextState === 'PUBLISHED' && nextDate.getTime() <= Date.now()) {
-      throw new BadRequestException('Data deve ser futura para publicar');
-    }
-    if (existing.state === 'DRAFT' && nextState === 'CANCELLED') {
-      throw new BadRequestException('Rascunho não pode ser cancelado');
-    }
-    if (nextState === 'CANCELLED' && !cancelledReason) {
-      throw new BadRequestException('Informe o motivo do cancelamento');
-    }
+
     if (typeof capacity !== 'undefined' && capacity !== null && capacity <= 0) {
       throw new BadRequestException('Capacidade deve ser positiva');
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (capacity && existing.guests.filter((g: any) => g.status === 'YES').length > capacity) {
       throw new BadRequestException('Capacidade menor que confirmações atuais');
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+    // Lógica de disponibilidade
+    let newAvailability = existing.availability;
+    const now = new Date();
+    const newDate = date ? new Date(date) : existing.date;
+
+    // Se usuário está tentando cancelar
+    if (parsed.data.availability === 'CANCELLED') {
+      newAvailability = 'CANCELLED';
+    }
+    // Se usuário está tentando arquivar
+    else if (parsed.data.availability === 'ARCHIVED') {
+      newAvailability = 'ARCHIVED';
+    }
+    // Se usuário está tentando publicar
+    else if (parsed.data.availability === 'PUBLISHED') {
+      // Só pode publicar se data for futura
+      if (newDate.getTime() > now.getTime()) {
+        newAvailability = 'PUBLISHED';
+      } else {
+        throw new BadRequestException('Só é possível publicar eventos com data futura');
+      }
+    }
+
+    // Se data foi alterada para futuro, volta para PUBLISHED
+    if (existing.availability === 'COMPLETED' && newDate.getTime() > now.getTime()) {
+      newAvailability = 'PUBLISHED';
+    }
+    // Se data foi alterada para passado, marca como COMPLETED
+    if (newDate.getTime() <= now.getTime()) {
+      newAvailability = 'COMPLETED';
+    }
+
+    // CANCELLED só visível para inscritos
+    // (visibilidade será tratada no GET)
+
     const changes: any = {
       title,
       description: description ?? undefined,
-      date: date ? new Date(date) : undefined,
+      date: date ? newDate : undefined,
       time,
       location,
       visibility,
-      state,
       rsvpDeadline:
         typeof rsvpDeadline !== 'undefined'
           ? rsvpDeadline
@@ -276,15 +313,13 @@ export class EventsController {
       showGuestList,
       timezone,
       cancelledReason: typeof cancelledReason !== 'undefined' ? cancelledReason || null : undefined,
+      availability: newAvailability,
     };
     const updated = await this.prisma.event.update({
       where: { id },
       data: changes,
       include: { guests: true },
     });
-    // await recordAudit(id, "EVENT_UPDATED", JSON.stringify(parsed.data), uid);
-    // Notificações em cancelamento e mudanças importantes
-    // if (notifyGuests) { ... }
     return updated;
   }
 
@@ -355,15 +390,39 @@ export class EventsController {
 
     const event = await this.prisma.event.findUnique({
       where: { id },
-      select: { ownerId: true },
+      select: { ownerId: true, visibility: true, availability: true },
     });
 
     if (!event) throw new NotFoundException('Evento não encontrado');
-    if (event.ownerId !== uid) throw new ForbiddenException('Apenas o criador pode adicionar convidados');
 
     const emails = body.emails;
     if (!Array.isArray(emails) || emails.length === 0) {
       throw new BadRequestException('Lista de emails inválida');
+    }
+
+    // Get current user email
+    const user = await this.prisma.user.findUnique({
+      where: { id: uid },
+      select: { email: true },
+    });
+
+    if (!user) throw new UnauthorizedException('Usuário não encontrado');
+
+    // Verificar permissões:
+    // 1. Se é o dono do evento, pode adicionar qualquer email
+    // 2. Se NÃO é o dono, só pode adicionar o próprio email em eventos públicos e publicados
+    const isOwner = event.ownerId === uid;
+
+    if (!isOwner) {
+      // Não é o dono - verificar se está tentando se auto-inscrever em evento público
+      if (event.visibility !== 'PUBLIC' || event.availability !== 'PUBLISHED') {
+        throw new ForbiddenException('Apenas eventos públicos e publicados permitem auto-inscrição');
+      }
+
+      // Verificar se está tentando adicionar apenas o próprio email
+      if (emails.length !== 1 || emails[0] !== user.email) {
+        throw new ForbiddenException('Você só pode se inscrever em eventos públicos. Apenas o criador pode adicionar outros convidados.');
+      }
     }
 
     // Validate emails

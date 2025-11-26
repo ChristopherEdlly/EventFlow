@@ -6,12 +6,7 @@
 import { api } from './api';
 
 export type EventVisibility = 'PUBLIC' | 'PRIVATE';
-export type EventState =
-  | 'DRAFT'
-  | 'PUBLISHED'
-  | 'CANCELLED'
-  | 'COMPLETED'
-  | 'ARCHIVED';
+// Estados removidos do sistema
 export type GuestStatus = 'YES' | 'NO' | 'MAYBE' | 'WAITLISTED' | 'PENDING';
 
 export interface Event {
@@ -20,12 +15,15 @@ export interface Event {
   description: string | null;
   date: string;
   time: string | null;
+  endDate?: string | null;
+  endTime?: string | null;
   location: string | null;
   visibility: EventVisibility;
-  state: EventState;
+  availability: 'PUBLISHED' | 'COMPLETED' | 'CANCELLED';
   capacity: number | null;
-  allowWaitlist: boolean;
-  requireApproval: boolean;
+  waitlistEnabled: boolean;
+  showGuestList: boolean;
+  timezone: string | null;
   ownerId: string;
   createdAt: string;
   updatedAt: string;
@@ -51,11 +49,15 @@ export interface CreateEventDto {
   description?: string;
   date: string;
   time?: string;
+  endDate?: string;
+  endTime?: string;
   location?: string;
   visibility?: EventVisibility;
+  availability?: 'PUBLISHED' | 'COMPLETED' | 'CANCELLED';
   capacity?: number;
-  allowWaitlist?: boolean;
-  requireApproval?: boolean;
+  waitlistEnabled?: boolean;
+  showGuestList?: boolean;
+  timezone?: string;
 }
 
 export interface UpdateEventDto {
@@ -63,12 +65,15 @@ export interface UpdateEventDto {
   description?: string;
   date?: string;
   time?: string;
+  endDate?: string;
+  endTime?: string;
   location?: string;
   visibility?: EventVisibility;
-  state?: EventState;
+  availability?: 'PUBLISHED' | 'COMPLETED' | 'CANCELLED';
   capacity?: number;
-  allowWaitlist?: boolean;
-  requireApproval?: boolean;
+  waitlistEnabled?: boolean;
+  showGuestList?: boolean;
+  timezone?: string;
 }
 
 export interface AddGuestDto {

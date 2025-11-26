@@ -3,6 +3,7 @@ import { eventsService, type Event } from '../services/events';
 import type { ApiError } from '../services/api';
 import ConfirmModal from '../components/ConfirmModal';
 import EditEventModal from '../components/EditEventModal';
+import PageHeader from '../components/PageHeader';
 
 interface MyEventsPageProps {
   onViewEvent: (eventId: string) => void;
@@ -16,6 +17,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; eventId: string | null }>({ isOpen: false, eventId: null });
   const [editModal, setEditModal] = useState<{ isOpen: boolean; event: Event | null }>({ isOpen: false, event: null });
 
@@ -53,8 +55,6 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       event.location?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = statusFilter === 'all' || event.state === statusFilter;
-
     let matchesDate = true;
     if (dateFilter !== 'all') {
       const eventDate = new Date(event.date);
@@ -66,24 +66,8 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
       }
     }
 
-    return matchesSearch && matchesStatus && matchesDate;
+    return matchesSearch && matchesDate;
   });
-
-  const getStatusBadge = (state: string) => {
-    const badges: Record<string, { bg: string; text: string; label: string }> = {
-      DRAFT: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Rascunho' },
-      PUBLISHED: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Publicado' },
-      CANCELLED: { bg: 'bg-red-100', text: 'text-red-700', label: 'Cancelado' },
-      COMPLETED: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Passado' },
-    };
-
-    const badge = badges[state] ?? badges.DRAFT;
-    return (
-      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${badge!.bg} ${badge!.text}`}>
-        {badge!.label}
-      </span>
-    );
-  };
 
   if (isLoading) {
     return (
@@ -97,37 +81,33 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
   }
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Meus Eventos</h1>
-          <p className="text-gray-600 mt-1">Gerencie todos os seus eventos</p>
-        </div>
-        <button
-          onClick={() => window.location.href = '/new-event'}
-          className="px-6 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    <div>
+      {/* Header with Integrated Controls */}
+      <PageHeader
+        title="Meus Eventos"
+        subtitle="Gerencie todos os seus eventos"
+        icon={
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          Criar Novo Evento
-        </button>
-      </div>
-
-      {/* Filters Bar */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+        }
+        actions={
+          <button
+            onClick={() => window.location.href = '/new-event'}
+            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Criar Novo Evento
+          </button>
+        }
+      >
+        {/* Integrated Controls */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
           {/* Search */}
           <div className="flex-1">
             <div className="relative">
-              <input
-                type="text"
-                placeholder="Buscar por nome do evento..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-              />
               <svg
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
                 fill="none"
@@ -136,6 +116,13 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
+              <input
+                type="text"
+                placeholder="Buscar por nome do evento..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
             </div>
           </div>
 
@@ -143,9 +130,9 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-            <option value="all">Todos os Status</option>
+            <option value="all">Status: Todos</option>
             <option value="DRAFT">Rascunho</option>
             <option value="PUBLISHED">Publicado</option>
             <option value="CANCELLED">Cancelado</option>
@@ -156,18 +143,18 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
           <select
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-            <option value="all">Todas as Datas</option>
+            <option value="all">Data: Todas</option>
             <option value="upcoming">Próximos</option>
             <option value="past">Passados</option>
           </select>
 
           {/* View Toggle */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+          <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded ${viewMode === 'list' ? 'bg-white shadow-sm text-primary-600' : 'text-gray-500'}`}
+              className={`p-2 rounded transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
               title="Visualização em lista"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,7 +163,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded ${viewMode === 'grid' ? 'bg-white shadow-sm text-primary-600' : 'text-gray-500'}`}
+              className={`p-2 rounded transition-colors ${viewMode === 'grid' ? 'bg-white shadow-sm text-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
               title="Visualização em grade"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,7 +172,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
             </button>
           </div>
         </div>
-      </div>
+      </PageHeader>
 
       {/* Events Table/Grid */}
       {filteredEvents.length === 0 ? (
@@ -199,7 +186,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
           <p className="text-gray-500 mb-4">Ajuste os filtros ou crie um novo evento</p>
         </div>
       ) : viewMode === 'list' ? (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto pb-32">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -224,7 +211,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredEvents.map((event) => (
+              {filteredEvents.map((event, index) => (
                 <tr key={event.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="font-medium text-gray-900">{event.title}</div>
@@ -243,7 +230,17 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    {getStatusBadge(event.state)}
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold
+                      ${event.availability === 'PUBLISHED' ? 'bg-emerald-100 text-emerald-700' :
+                        event.availability === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                        event.availability === 'COMPLETED' ? 'bg-gray-100 text-gray-700' :
+                        'bg-gray-50 text-gray-500'}
+                    `}>
+                      {event.availability === 'PUBLISHED' ? 'Publicado' :
+                        event.availability === 'CANCELLED' ? 'Cancelado' :
+                        event.availability === 'COMPLETED' ? 'Concluído' :
+                        'Indefinido'}
+                    </span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-gray-900">
@@ -255,6 +252,18 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const viewportHeight = window.innerHeight;
+                          const spaceBelow = viewportHeight - rect.bottom;
+                          const menuHeight = 150; // altura aproximada do menu
+
+                          // Decide se abre para cima ou para baixo
+                          const openUpwards = spaceBelow < menuHeight && rect.top > menuHeight;
+
+                          setMenuPosition({
+                            top: openUpwards ? rect.top - menuHeight : rect.bottom + 8,
+                            right: window.innerWidth - rect.right
+                          });
                           setOpenMenuId(openMenuId === event.id ? null : event.id);
                         }}
                         className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
@@ -265,16 +274,26 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
                       </button>
 
                       {/* Dropdown Menu */}
-                      {openMenuId === event.id && (
+                      {openMenuId === event.id && menuPosition && (
                         <>
                           <div
                             className="fixed inset-0 z-10"
-                            onClick={() => setOpenMenuId(null)}
+                            onClick={() => {
+                              setOpenMenuId(null);
+                              setMenuPosition(null);
+                            }}
                           ></div>
-                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                          <div
+                            className="fixed w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50"
+                            style={{
+                              top: `${menuPosition.top}px`,
+                              right: `${menuPosition.right}px`
+                            }}
+                          >
                             <button
                               onClick={() => {
                                 setOpenMenuId(null);
+                                setMenuPosition(null);
                                 onViewEvent(event.id);
                               }}
                               className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -288,6 +307,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
                             <button
                               onClick={() => {
                                 setOpenMenuId(null);
+                                setMenuPosition(null);
                                 setEditModal({ isOpen: true, event });
                               }}
                               className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -300,6 +320,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
                             <button
                               onClick={() => {
                                 setOpenMenuId(null);
+                                setMenuPosition(null);
                                 setDeleteModal({ isOpen: true, eventId: event.id });
                               }}
                               className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
@@ -318,24 +339,6 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
               ))}
             </tbody>
           </table>
-
-          {/* Pagination */}
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-            <div className="text-sm text-gray-500">
-              Mostrando 1-{filteredEvents.length} de {filteredEvents.length} eventos
-            </div>
-            <div className="flex items-center gap-2">
-              <button className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-                Anterior
-              </button>
-              <button className="px-3 py-1 text-sm bg-primary-500 text-white rounded">1</button>
-              <button className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">2</button>
-              <button className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">3</button>
-              <button className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-                Próximo
-              </button>
-            </div>
-          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -347,7 +350,8 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
             >
               <div className="flex items-start justify-between mb-4">
                 <h3 className="font-semibold text-gray-900 text-lg">{event.title}</h3>
-                {getStatusBadge(event.state)}
+                {/* status badge removid
+                o */}
               </div>
               <div className="space-y-2 text-sm text-gray-600">
                 <div className="flex items-center gap-2">

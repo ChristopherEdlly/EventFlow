@@ -26,15 +26,16 @@ model Event {
   description    String?
   date           DateTime
   time           String
+  endDate        DateTime?
+  endTime        String?
   location       String
   visibility     String
-  state          String
+  availability   String   @default("PUBLISHED") // PUBLISHED, ARCHIVED, COMPLETED
   rsvpDeadline   DateTime?
   capacity       Int?
   waitlistEnabled Boolean @default(false)
   showGuestList  Boolean @default(false)
   timezone       String?
-  cancelledReason String?
   ownerId        String
   owner          User     @relation("OwnerEvents", fields: [ownerId], references: [id])
   guests         Guest[]
