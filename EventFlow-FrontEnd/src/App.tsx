@@ -254,7 +254,7 @@ function AppRoutes() {
             >
               <EventDetailsPage
                 eventId={selectedEventId || window.location.pathname.split('/').pop() || ''}
-                onBack={() => navigate('/my-events')}
+                onBack={() => navigate(-1)}
               />
             </Layout>
           </ProtectedRoute>

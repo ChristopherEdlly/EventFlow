@@ -64,6 +64,16 @@ class ApiClient {
           statusCode: response.status,
           details: errorData,
         };
+
+        // Se receber 401 Unauthorized, limpar token e redirecionar para login
+        if (response.status === 401) {
+          this.clearToken();
+          // Redirecionar para login se não estiver já lá
+          if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+            window.location.href = '/login';
+          }
+        }
+
         throw error;
       }
 

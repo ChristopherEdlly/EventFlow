@@ -157,22 +157,33 @@ export default function Layout({ children, currentPage, onNavigate, onLogout, us
           </button>
         </div>
 
-        {/* Collapse Toggle */}
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
-        >
-          <svg
-            className={`w-4 h-4 text-gray-600 transition-transform ${
-              sidebarCollapsed ? 'rotate-180' : ''
-            }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        {/* Collapse Toggle - Melhorado com novo design */}
+        <div className="absolute -right-3 top-1/2 -translate-y-1/2 z-50">
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="relative w-6 h-16 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 rounded-r-lg flex flex-col items-center justify-center shadow-lg hover:shadow-xl transition-all group"
+            title={sidebarCollapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+            {/* Ícone de três linhas indicando menu */}
+            <div className="flex flex-col gap-1">
+              <div className={`w-4 h-0.5 bg-white rounded-full transition-all ${sidebarCollapsed ? 'translate-x-0.5' : '-translate-x-0.5'}`}></div>
+              <div className="w-4 h-0.5 bg-white rounded-full"></div>
+              <div className={`w-4 h-0.5 bg-white rounded-full transition-all ${sidebarCollapsed ? 'translate-x-0.5' : '-translate-x-0.5'}`}></div>
+            </div>
+
+            {/* Seta indicadora */}
+            <svg
+              className={`w-3 h-3 text-white mt-1 transition-transform duration-300 ${
+                sidebarCollapsed ? 'rotate-180' : ''
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content Area */}
