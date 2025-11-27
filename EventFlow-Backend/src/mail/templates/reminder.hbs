@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lembrete de Evento</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f4f4f7;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .alert-box {
+            background-color: #fff5f5;
+            border-left: 4px solid #f5576c;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        .alert-box.pending {
+            background-color: #fffaf0;
+            border-left-color: #ed8936;
+        }
+        .event-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0 0 15px 0;
+        }
+        .detail-row {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: flex-start;
+        }
+        .detail-icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        .detail-value {
+            color: #2d3748;
+        }
+        .cta-button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            margin: 25px 0;
+            box-shadow: 0 4px 6px rgba(245, 87, 108, 0.3);
+        }
+        .footer {
+            background-color: #f7fafc;
+            padding: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #718096;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⏰ Lembrete de Evento</h1>
+        </div>
+
+        <div class="content">
+            <p>Olá {{guestName}},</p>
+
+            {{#if isPending}}
+            <div class="alert-box pending">
+                <p style="margin: 0; font-weight: 600; color: #c05621;">
+                    ⚠️ Você ainda não confirmou sua presença!
+                </p>
+                <p style="margin: 10px 0 0 0;">
+                    Por favor, confirme o quanto antes se poderá participar do evento.
+                </p>
+            </div>
+            {{else}}
+            <p>Este é um lembrete sobre o evento que você confirmou presença:</p>
+            {{/if}}
+
+            <div class="alert-box">
+                <h2 class="event-title">{{eventTitle}}</h2>
+
+                <div class="detail-row">
+                    <span class="detail-icon">📅</span>
+                    <span class="detail-value"><strong>{{eventDate}}</strong></span>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-icon">🕐</span>
+                    <span class="detail-value"><strong>{{eventTime}}</strong></span>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-icon">📍</span>
+                    <span class="detail-value">{{eventLocation}}</span>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-icon">👤</span>
+                    <span class="detail-value">{{organizerName}}</span>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="{{eventUrl}}" class="cta-button">
+                    {{#if isPending}}
+                    Confirmar Presença Agora
+                    {{else}}
+                    Ver Detalhes do Evento
+                    {{/if}}
+                </a>
+            </div>
+
+            <p style="font-size: 14px; color: #718096; margin-top: 30px; text-align: center;">
+                Nos vemos lá! 🎉
+            </p>
+        </div>
+
+        <div class="footer">
+            <p><strong>EventFlow</strong> - Simplifique a gestão dos seus eventos</p>
+            <p>© {{year}} EventFlow. Todos os direitos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>

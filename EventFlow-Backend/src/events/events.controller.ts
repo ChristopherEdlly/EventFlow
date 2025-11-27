@@ -13,6 +13,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
 import { z } from 'zod';
@@ -66,7 +67,10 @@ const EventUpdateSchema = z.object({
 
 @Controller('events')
 export class EventsController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -492,6 +496,12 @@ export class EventsController {
       }
     }
 
+    // Get event details and owner for email
+    const fullEvent = await this.prisma.event.findUnique({
+      where: { id },
+      include: { owner: { select: { name: true } } },
+    });
+
     // Create guests
     const guests = [];
     for (const email of emails) {
@@ -510,6 +520,22 @@ export class EventsController {
           },
         });
         guests.push(guest);
+
+        // Send invitation email automatically
+        if (fullEvent) {
+          await this.mailService.sendEventInvite({
+            guestName: guest.name,
+            guestEmail: guest.email,
+            eventTitle: fullEvent.title,
+            eventDate: fullEvent.date.toLocaleDateString('pt-BR'),
+            eventTime: fullEvent.time || 'A definir',
+            eventLocation: fullEvent.location || 'A definir',
+            eventDescription: fullEvent.description || undefined,
+            organizerName: fullEvent.owner.name,
+            eventId: fullEvent.id,
+            guestId: guest.id,
+          });
+        }
       }
     }
 
@@ -1004,5 +1030,171 @@ export class EventsController {
     });
 
     return updated;
+  }
+
+  // ============== EMAIL ENDPOINTS ==============
+
+  /**
+   * Resend invitation email to a specific guest
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post(':eventId/guests/:guestId/send-invite')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async sendInviteToGuest(
+    @Param('eventId') eventId: string,
+    @Param('guestId') guestId: string,
+    @Req() req: any,
+  ) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Get event with owner
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      include: { owner: { select: { name: true } } },
+    });
+
+    if (!event) throw new NotFoundException('Evento não encontrado');
+
+    // Only owner can send invites
+    if (event.ownerId !== uid) {
+      throw new ForbiddenException('Apenas o organizador pode enviar convites');
+    }
+
+    // Get guest
+    const guest = await this.prisma.guest.findUnique({
+      where: { id: guestId },
+    });
+
+    if (!guest || guest.eventId !== eventId) {
+      throw new NotFoundException('Convidado não encontrado');
+    }
+
+    // Send email
+    const success = await this.mailService.sendEventInvite({
+      guestName: guest.name,
+      guestEmail: guest.email,
+      eventTitle: event.title,
+      eventDate: event.date.toLocaleDateString('pt-BR'),
+      eventTime: event.time || 'A definir',
+      eventLocation: event.location || 'A definir',
+      eventDescription: event.description || undefined,
+      organizerName: event.owner.name,
+      eventId: event.id,
+      guestId: guest.id,
+    });
+
+    if (!success) {
+      throw new BadRequestException('Erro ao enviar convite');
+    }
+
+    return { message: 'Convite enviado com sucesso' };
+  }
+
+  /**
+   * Send reminder email to a specific guest
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post(':eventId/guests/:guestId/send-reminder')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async sendReminderToGuest(
+    @Param('eventId') eventId: string,
+    @Param('guestId') guestId: string,
+    @Req() req: any,
+  ) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Get event with owner
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      include: { owner: { select: { name: true } } },
+    });
+
+    if (!event) throw new NotFoundException('Evento não encontrado');
+
+    // Only owner can send reminders
+    if (event.ownerId !== uid) {
+      throw new ForbiddenException('Apenas o organizador pode enviar lembretes');
+    }
+
+    // Get guest
+    const guest = await this.prisma.guest.findUnique({
+      where: { id: guestId },
+    });
+
+    if (!guest || guest.eventId !== eventId) {
+      throw new NotFoundException('Convidado não encontrado');
+    }
+
+    // Send email
+    const success = await this.mailService.sendEventReminder({
+      guestName: guest.name,
+      guestEmail: guest.email,
+      eventTitle: event.title,
+      eventDate: event.date.toLocaleDateString('pt-BR'),
+      eventTime: event.time || 'A definir',
+      eventLocation: event.location || 'A definir',
+      organizerName: event.owner.name,
+      eventId: event.id,
+      guestId: guest.id,
+      status: guest.status,
+    });
+
+    if (!success) {
+      throw new BadRequestException('Erro ao enviar lembrete');
+    }
+
+    return { message: 'Lembrete enviado com sucesso' };
+  }
+
+  /**
+   * Send reminder emails to all guests of an event
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/send-bulk-reminders')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async sendBulkReminders(@Param('id') id: string, @Req() req: any) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Get event with owner and guests
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      include: {
+        owner: { select: { name: true } },
+        guests: true,
+      },
+    });
+
+    if (!event) throw new NotFoundException('Evento não encontrado');
+
+    // Only owner can send bulk reminders
+    if (event.ownerId !== uid) {
+      throw new ForbiddenException('Apenas o organizador pode enviar lembretes em massa');
+    }
+
+    // Prepare reminder data for all guests
+    const reminders = event.guests.map((guest: any) => ({
+      guestName: guest.name,
+      guestEmail: guest.email,
+      eventTitle: event.title,
+      eventDate: event.date.toLocaleDateString('pt-BR'),
+      eventTime: event.time || 'A definir',
+      eventLocation: event.location || 'A definir',
+      organizerName: event.owner.name,
+      eventId: event.id,
+      guestId: guest.id,
+      status: guest.status,
+    }));
+
+    // Send bulk reminders
+    const result = await this.mailService.sendBulkReminders(reminders);
+
+    return {
+      message: `Lembretes enviados: ${result.sent} enviados, ${result.failed} falhas`,
+      sent: result.sent,
+      failed: result.failed,
+    };
   }
 }

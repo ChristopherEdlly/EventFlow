@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evento Cancelado</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f7; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 40px 30px; text-align: center; color: #fff; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .content { padding: 40px 30px; }
+        .alert-box { background-color: #fee2e2; border-left: 4px solid #ef4444; padding: 20px; margin: 25px 0; border-radius: 8px; }
+        .event-title { font-size: 22px; font-weight: 700; color: #2d3748; margin: 0 0 10px 0; }
+        .footer { background-color: #f7fafc; padding: 30px; text-align: center; font-size: 14px; color: #718096; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>❌ Evento Cancelado</h1>
+        </div>
+        <div class="content">
+            <p>Olá {{guestName}},</p>
+            <p>Infelizmente, o evento abaixo foi cancelado:</p>
+            <div class="alert-box">
+                <h2 class="event-title">{{eventTitle}}</h2>
+                <p><strong>Organizador:</strong> {{organizerName}}</p>
+                {{#if reason}}
+                <p style="margin-top: 15px;"><strong>Motivo:</strong></p>
+                <p>{{reason}}</p>
+                {{/if}}
+            </div>
+            <p>Pedimos desculpas pelo inconveniente e esperamos vê-lo em eventos futuros!</p>
+        </div>
+        <div class="footer">
+            <p><strong>EventFlow</strong> © {{year}}</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -82,24 +82,28 @@ export default function GuestList({ guests, eventId, isOwner, onGuestsChanged, e
     }
   };
 
-  const handleResendInvite = (guest: Guest) => {
-    // Placeholder for resend invite functionality
-    showNotification(`Convite reenviado para ${guest.email}!`, 'success');
-    // TODO: Implement actual email sending when email service is configured
+  const handleResendInvite = async (guest: Guest) => {
+    try {
+      setIsUpdating(true);
+      await eventsService.sendInviteToGuest(eventId, guest.id);
+      showNotification(`Convite reenviado para ${guest.email}!`, 'success');
+    } catch (err) {
+      const apiError = err as ApiError;
+      showNotification(apiError.message || 'Erro ao reenviar convite', 'error');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleSendReminder = async () => {
-    if (!reminderGuest || !reminderMessage.trim()) {
-      showNotification('Digite uma mensagem para o lembrete', 'error');
+    if (!reminderGuest) {
       return;
     }
 
     setIsSendingReminder(true);
     try {
-      // Create an announcement mentioning this specific guest
-      const message = `📧 Lembrete para ${reminderGuest.name}: ${reminderMessage.trim()}`;
-      await eventsService.createAnnouncement(eventId, message);
-      showNotification('Lembrete enviado com sucesso!', 'success');
+      await eventsService.sendReminderToGuest(eventId, reminderGuest.id);
+      showNotification(`Lembrete enviado para ${reminderGuest.email}!`, 'success');
       setReminderGuest(null);
       setReminderMessage('');
     } catch (err) {
@@ -128,14 +132,23 @@ export default function GuestList({ guests, eventId, isOwner, onGuestsChanged, e
     }
   };
 
-  const handleBulkReminder = () => {
+  const handleBulkReminder = async () => {
     if (selectedGuests.size === 0) {
       showNotification('Selecione pelo menos um convidado', 'error');
       return;
     }
-    showNotification(`Lembrete enviado para ${selectedGuests.size} convidado(s)!`, 'success');
-    setSelectedGuests(new Set());
-    // TODO: Implement actual bulk reminder when email service is configured
+
+    try {
+      setIsUpdating(true);
+      const result = await eventsService.sendBulkReminders(eventId);
+      showNotification(result.message, result.failed > 0 ? 'error' : 'success');
+      setSelectedGuests(new Set());
+    } catch (err) {
+      const apiError = err as ApiError;
+      showNotification(apiError.message || 'Erro ao enviar lembretes', 'error');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleBulkDelete = async () => {
@@ -545,67 +558,21 @@ export default function GuestList({ guests, eventId, isOwner, onGuestsChanged, e
         isLoading={isUpdating}
       />
 
-      {/* Reminder Modal */}
-      {reminderGuest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-neutral-900 mb-2">
-              Enviar Lembrete
-            </h3>
-            <p className="text-sm text-neutral-600 mb-4">
-              Enviar lembrete para <strong>{reminderGuest.name}</strong> ({reminderGuest.email})
-            </p>
-            <div className="mb-4">
-              <label htmlFor="reminder-message" className="block text-sm font-medium text-neutral-700 mb-2">
-                Mensagem do lembrete
-              </label>
-              <textarea
-                id="reminder-message"
-                value={reminderMessage}
-                onChange={(e) => setReminderMessage(e.target.value)}
-                placeholder="Digite sua mensagem aqui..."
-                rows={4}
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-                autoFocus
-              />
-            </div>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setReminderGuest(null);
-                  setReminderMessage('');
-                }}
-                className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors"
-                disabled={isSendingReminder}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSendReminder}
-                disabled={isSendingReminder || !reminderMessage.trim()}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isSendingReminder ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Enviando...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                    Enviar
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Reminder Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!reminderGuest}
+        title="Enviar Lembrete"
+        message={`Tem certeza que deseja enviar um lembrete por email para ${reminderGuest?.name} (${reminderGuest?.email})?`}
+        confirmLabel="Enviar Lembrete"
+        cancelLabel="Cancelar"
+        onConfirm={handleSendReminder}
+        onCancel={() => {
+          setReminderGuest(null);
+          setReminderMessage('');
+        }}
+        variant="primary"
+        isLoading={isSendingReminder}
+      />
 
       {/* Toast Notification */}
       {showToast && (

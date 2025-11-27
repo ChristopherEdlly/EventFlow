@@ -72,51 +72,9 @@ export default function InfoPanel() {
   }, []);
 
   return (
-    <div className="relative h-full flex flex-col items-center justify-center p-8 lg:p-12">
-      {/* Logo no topo */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="mb-16"
-      >
-        <div className="flex flex-col items-center">
-          <motion.div
-            animate={{
-              y: [0, -8, 0],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            className="inline-flex items-center justify-center w-24 h-24 bg-white/25 backdrop-blur-lg rounded-3xl shadow-2xl mb-6 border border-white/30"
-          >
-            <svg
-              className="w-14 h-14 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </motion.div>
-          <h2 className="text-3xl font-bold text-white text-center mb-2">
-            EventFlow
-          </h2>
-          <p className="text-white/80 text-center text-sm">
-            Simplifique a gestão dos seus eventos
-          </p>
-        </div>
-      </motion.div>
-
+    <div className="relative h-full flex flex-col items-center justify-center p-6 lg:p-8">
       {/* Feature carousel - área principal */}
-      <div className="relative w-full max-w-lg">
+      <div className="relative w-full max-w-md">
         <AnimatePresence mode="wait">
           {features[currentSlide] && (
             <motion.div
@@ -132,9 +90,9 @@ export default function InfoPanel() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                className="mb-8 p-6 bg-white/20 backdrop-blur-md rounded-3xl shadow-2xl border border-white/30"
+                className="mb-6 p-4 bg-white/20 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30"
               >
-                <div className="text-white">
+                <div className="text-white [&>svg]:w-12 [&>svg]:h-12">
                   {features[currentSlide].icon}
                 </div>
               </motion.div>
@@ -144,7 +102,7 @@ export default function InfoPanel() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-3xl font-bold text-white mb-4"
+                className="text-2xl font-bold text-white mb-3"
               >
                 {features[currentSlide].title}
               </motion.h3>
@@ -154,7 +112,7 @@ export default function InfoPanel() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="text-white/90 text-lg max-w-md leading-relaxed"
+                className="text-white/90 text-base max-w-sm leading-relaxed"
               >
                 {features[currentSlide].description}
               </motion.p>
@@ -164,7 +122,7 @@ export default function InfoPanel() {
       </div>
 
       {/* Progress indicators - melhorados */}
-      <div className="mt-16 flex gap-3">
+      <div className="mt-10 flex gap-3">
         {features.map((_, index) => (
           <button
             key={index}
