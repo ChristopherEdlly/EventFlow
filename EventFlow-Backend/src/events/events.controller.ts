@@ -28,6 +28,14 @@ const EventCreateSchema = z.object({
   capacity: z.number().int().positive().nullable().optional(),
   allowWaitlist: z.boolean().optional(),
   requireApproval: z.boolean().optional(),
+  // Novos campos
+  category: z.enum(['CONFERENCIA', 'WORKSHOP', 'PALESTRA', 'FESTA', 'ESPORTIVO', 'CULTURAL', 'EDUCACIONAL', 'NETWORKING', 'CORPORATIVO', 'BENEFICENTE', 'OUTRO']).optional(),
+  eventType: z.enum(['PRESENCIAL', 'ONLINE', 'HIBRIDO']).optional(),
+  price: z.number().min(0).optional(),
+  minAge: z.number().int().min(0).max(120).nullable().optional(),
+  imageUrl: z.string().url().nullable().optional(),
+  onlineUrl: z.string().url().nullable().optional(),
+  tags: z.string().nullable().optional(),
 });
 
 const EventUpdateSchema = z.object({
@@ -46,6 +54,14 @@ const EventUpdateSchema = z.object({
   cancelledReason: z.string().optional().nullable(),
   revision: z.number().int().optional(),
   availability: z.enum(['PUBLISHED', 'ARCHIVED', 'COMPLETED', 'CANCELLED']).optional(),
+  // Novos campos
+  category: z.enum(['CONFERENCIA', 'WORKSHOP', 'PALESTRA', 'FESTA', 'ESPORTIVO', 'CULTURAL', 'EDUCACIONAL', 'NETWORKING', 'CORPORATIVO', 'BENEFICENTE', 'OUTRO']).optional(),
+  eventType: z.enum(['PRESENCIAL', 'ONLINE', 'HIBRIDO']).optional(),
+  price: z.number().min(0).optional(),
+  minAge: z.number().int().min(0).max(120).nullable().optional(),
+  imageUrl: z.string().url().nullable().optional(),
+  onlineUrl: z.string().url().nullable().optional(),
+  tags: z.string().nullable().optional(),
 });
 
 @Controller('events')
@@ -75,6 +91,14 @@ export class EventsController {
         waitlistEnabled: true,
         showGuestList: true,
         timezone: true,
+        // Novos campos
+        category: true,
+        eventType: true,
+        price: true,
+        minAge: true,
+        imageUrl: true,
+        onlineUrl: true,
+        tags: true,
         ownerId: true,
         createdAt: true,
       },
@@ -107,6 +131,14 @@ export class EventsController {
         waitlistEnabled: true,
         showGuestList: true,
         timezone: true,
+        // Novos campos
+        category: true,
+        eventType: true,
+        price: true,
+        minAge: true,
+        imageUrl: true,
+        onlineUrl: true,
+        tags: true,
         ownerId: true,
         createdAt: true,
       },
@@ -165,7 +197,10 @@ export class EventsController {
     const parsed = EventCreateSchema.safeParse(body);
     if (!parsed.success) throw new BadRequestException(parsed.error.flatten());
 
-    const { title, description, date, time, location, visibility, availability, capacity, allowWaitlist, requireApproval } = parsed.data;
+    const {
+      title, description, date, time, location, visibility, availability, capacity, allowWaitlist, requireApproval,
+      category, eventType, price, minAge, imageUrl, onlineUrl, tags
+    } = parsed.data;
 
     // Se não especificado, eventos públicos começam como 'PUBLISHED', privados não aparecem na lista pública
     const event = await this.prisma.event.create({
@@ -180,6 +215,14 @@ export class EventsController {
         capacity: capacity || null,
         waitlistEnabled: allowWaitlist || false,
         showGuestList: requireApproval || false,
+        // Novos campos
+        category: category || 'OUTRO',
+        eventType: eventType || 'PRESENCIAL',
+        price: price !== undefined ? price : 0,
+        minAge: minAge || null,
+        imageUrl: imageUrl || null,
+        onlineUrl: onlineUrl || null,
+        tags: tags || null,
         ownerId: uid,
       },
       include: {
@@ -250,6 +293,14 @@ export class EventsController {
       timezone,
       notifyGuests,
       cancelledReason,
+      // Novos campos
+      category,
+      eventType,
+      price,
+      minAge,
+      imageUrl,
+      onlineUrl,
+      tags,
       // availability removido, pois é controlado por newAvailability
     } = parsed.data;
 
@@ -314,6 +365,14 @@ export class EventsController {
       timezone,
       cancelledReason: typeof cancelledReason !== 'undefined' ? cancelledReason || null : undefined,
       availability: newAvailability,
+      // Novos campos
+      category: category !== undefined ? category : undefined,
+      eventType: eventType !== undefined ? eventType : undefined,
+      price: price !== undefined ? price : undefined,
+      minAge: typeof minAge !== 'undefined' ? minAge : undefined,
+      imageUrl: typeof imageUrl !== 'undefined' ? imageUrl : undefined,
+      onlineUrl: typeof onlineUrl !== 'undefined' ? onlineUrl : undefined,
+      tags: typeof tags !== 'undefined' ? tags : undefined,
     };
     const updated = await this.prisma.event.update({
       where: { id },
@@ -710,5 +769,240 @@ export class EventsController {
     });
 
     return { message: 'Anúncio removido com sucesso' };
+  }
+
+  // ============== MESSAGE ENDPOINTS ==============
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/messages')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async sendMessage(
+    @Param('id') id: string,
+    @Body() body: any,
+    @Req() req: any,
+  ) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Check if event exists
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      select: { ownerId: true, visibility: true },
+    });
+
+    if (!event) throw new NotFoundException('Evento não encontrado');
+
+    // Get user email
+    const user = await this.prisma.user.findUnique({
+      where: { id: uid },
+      select: { email: true },
+    });
+
+    if (!user) throw new UnauthorizedException('Usuário não encontrado');
+
+    // Check if user is a guest of this event or the owner
+    const isOwner = event.ownerId === uid;
+    const isGuest = await this.prisma.guest.findFirst({
+      where: { eventId: id, email: user.email },
+    });
+
+    if (!isOwner && !isGuest) {
+      throw new ForbiddenException('Você deve ser um convidado ou organizador para enviar mensagens');
+    }
+
+    const { content } = body;
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+      throw new BadRequestException('Conteúdo da mensagem é obrigatório');
+    }
+
+    // Determine sender and receiver
+    // If user is owner, they're replying to a participant
+    // If user is participant, they're sending to owner
+    let receiverId: string;
+
+    if (isOwner) {
+      // Owner is replying - need to specify which participant
+      receiverId = body.receiverId;
+      if (!receiverId) {
+        throw new BadRequestException('receiverId é obrigatório ao responder como organizador');
+      }
+    } else {
+      // Participant is sending to owner
+      receiverId = event.ownerId;
+    }
+
+    // Create message
+    const message = await this.prisma.message.create({
+      data: {
+        content: content.trim(),
+        senderId: uid,
+        receiverId,
+        eventId: id,
+      },
+      include: {
+        sender: {
+          select: { id: true, name: true, email: true },
+        },
+        receiver: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+
+    return message;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/messages/conversations')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getConversations(@Param('id') id: string, @Req() req: any) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Check if user is the event owner
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      select: { ownerId: true },
+    });
+
+    if (!event) throw new NotFoundException('Evento não encontrado');
+    if (event.ownerId !== uid) {
+      throw new ForbiddenException('Apenas o organizador pode ver todas as conversas');
+    }
+
+    // Get all messages for this event where owner is sender or receiver
+    const messages = await this.prisma.message.findMany({
+      where: {
+        eventId: id,
+        OR: [
+          { senderId: uid },
+          { receiverId: uid },
+        ],
+      },
+      include: {
+        sender: {
+          select: { id: true, name: true, email: true },
+        },
+        receiver: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Group messages by conversation (other user ID)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const conversationsMap = new Map<string, any>();
+
+    for (const message of messages) {
+      const otherUserId = message.senderId === uid ? message.receiverId : message.senderId;
+      const otherUser = message.senderId === uid ? message.receiver : message.sender;
+
+      if (!conversationsMap.has(otherUserId)) {
+        conversationsMap.set(otherUserId, {
+          userId: otherUserId,
+          userName: otherUser.name,
+          userEmail: otherUser.email,
+          lastMessage: message.content,
+          lastMessageAt: message.createdAt,
+          unreadCount: 0,
+        });
+      }
+
+      // Count unread messages (messages sent TO the owner that are unread)
+      if (message.receiverId === uid && !message.read) {
+        conversationsMap.get(otherUserId).unreadCount++;
+      }
+    }
+
+    return Array.from(conversationsMap.values());
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/messages/:otherUserId')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getMessageThread(
+    @Param('id') id: string,
+    @Param('otherUserId') otherUserId: string,
+    @Req() req: any,
+  ) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Check if event exists
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      select: { ownerId: true },
+    });
+
+    if (!event) throw new NotFoundException('Evento não encontrado');
+
+    // User must be either the owner or the other user
+    if (uid !== event.ownerId && uid !== otherUserId) {
+      throw new ForbiddenException('Você não tem permissão para ver esta conversa');
+    }
+
+    // Get all messages between these two users for this event
+    const messages = await this.prisma.message.findMany({
+      where: {
+        eventId: id,
+        OR: [
+          { senderId: uid, receiverId: otherUserId },
+          { senderId: otherUserId, receiverId: uid },
+        ],
+      },
+      include: {
+        sender: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // Mark messages as read if the current user is the receiver
+    await this.prisma.message.updateMany({
+      where: {
+        eventId: id,
+        receiverId: uid,
+        senderId: otherUserId,
+        read: false,
+      },
+      data: { read: true },
+    });
+
+    return messages;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/messages/:messageId/read')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async markMessageAsRead(
+    @Param('id') id: string,
+    @Param('messageId') messageId: string,
+    @Req() req: any,
+  ) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Find message
+    const message = await this.prisma.message.findUnique({
+      where: { id: messageId },
+    });
+
+    if (!message) throw new NotFoundException('Mensagem não encontrada');
+    if (message.eventId !== id) {
+      throw new BadRequestException('Mensagem não pertence a este evento');
+    }
+    if (message.receiverId !== uid) {
+      throw new ForbiddenException('Você só pode marcar suas próprias mensagens como lidas');
+    }
+
+    // Mark as read
+    const updated = await this.prisma.message.update({
+      where: { id: messageId },
+      data: { read: true },
+    });
+
+    return updated;
   }
 }

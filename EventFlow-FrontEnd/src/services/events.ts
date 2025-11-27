@@ -6,6 +6,21 @@
 import { api } from './api';
 
 export type EventVisibility = 'PUBLIC' | 'PRIVATE';
+export type EventCategory =
+  | 'CONFERENCIA'
+  | 'WORKSHOP'
+  | 'PALESTRA'
+  | 'FESTA'
+  | 'ESPORTIVO'
+  | 'CULTURAL'
+  | 'EDUCACIONAL'
+  | 'NETWORKING'
+  | 'CORPORATIVO'
+  | 'BENEFICENTE'
+  | 'OUTRO';
+
+export type EventType = 'PRESENCIAL' | 'ONLINE' | 'HIBRIDO';
+
 // Estados removidos do sistema
 export type GuestStatus = 'YES' | 'NO' | 'MAYBE' | 'WAITLISTED' | 'PENDING';
 
@@ -24,6 +39,14 @@ export interface Event {
   waitlistEnabled: boolean;
   showGuestList: boolean;
   timezone: string | null;
+  // Novos campos
+  category: EventCategory;
+  eventType: EventType;
+  price: number;
+  minAge: number | null;
+  imageUrl: string | null;
+  onlineUrl: string | null;
+  tags: string | null;
   ownerId: string;
   createdAt: string;
   updatedAt: string;
@@ -58,6 +81,14 @@ export interface CreateEventDto {
   waitlistEnabled?: boolean;
   showGuestList?: boolean;
   timezone?: string;
+  // Novos campos
+  category?: EventCategory;
+  eventType?: EventType;
+  price?: number;
+  minAge?: number;
+  imageUrl?: string;
+  onlineUrl?: string;
+  tags?: string;
 }
 
 export interface UpdateEventDto {
@@ -74,6 +105,14 @@ export interface UpdateEventDto {
   waitlistEnabled?: boolean;
   showGuestList?: boolean;
   timezone?: string;
+  // Novos campos
+  category?: EventCategory;
+  eventType?: EventType;
+  price?: number;
+  minAge?: number;
+  imageUrl?: string;
+  onlineUrl?: string;
+  tags?: string;
 }
 
 export interface AddGuestDto {

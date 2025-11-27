@@ -15,6 +15,11 @@ describe('AuthService', () => {
     password: 'hashedPassword',
     createdAt: new Date(),
     updatedAt: new Date(),
+    role: 'USER' as any,
+    isBanned: false,
+    bannedAt: null,
+    bannedUntil: null,
+    banReason: null,
   };
 
   beforeEach(async () => {

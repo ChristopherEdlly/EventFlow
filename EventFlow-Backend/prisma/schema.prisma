@@ -10,18 +10,78 @@ datasource db {
   url      = env("SQLITE_DATABASE_URL")
 }
 
+enum EventType {
+  PRESENCIAL
+  ONLINE
+  HIBRIDO
+}
+
+enum EventCategory {
+  CONFERENCIA
+  WORKSHOP
+  PALESTRA
+  FESTA
+  ESPORTIVO
+  CULTURAL
+  EDUCACIONAL
+  NETWORKING
+  CORPORATIVO
+  BENEFICENTE
+  OUTRO
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ReportReason {
+  SPAM
+  INAPPROPRIATE
+  FRAUD
+  SCAM
+  MISLEADING
+  HARASSMENT
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}
+
+enum PenaltyType {
+  WARNING
+  SUSPENSION
+  BAN
+}
+
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  events    Event[]  @relation("OwnerEvents")
-  guests    Guest[]
-  createdAt DateTime @default(now())
+  id               String    @id @default(uuid())
+  name             String
+  email            String    @unique
+  password         String
+  role             UserRole  @default(USER)
+
+  // Ban system
+  isBanned         Boolean   @default(false)
+  bannedAt         DateTime?
+  bannedUntil      DateTime?
+  banReason        String?
+
+  events           Event[]   @relation("OwnerEvents")
+  guests           Guest[]
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  reports          Report[]  @relation("ReportedBy")
+  penalties        Penalty[]
+  createdAt        DateTime  @default(now())
 }
 
 model Event {
-  id             String   @id @default(uuid())
+  id             String        @id @default(uuid())
   title          String
   description    String?
   date           DateTime
@@ -30,17 +90,35 @@ model Event {
   endTime        String?
   location       String
   visibility     String
-  availability   String   @default("PUBLISHED") // PUBLISHED, ARCHIVED, COMPLETED
+  availability   String        @default("PUBLISHED") // PUBLISHED, ARCHIVED, COMPLETED
   rsvpDeadline   DateTime?
   capacity       Int?
-  waitlistEnabled Boolean @default(false)
-  showGuestList  Boolean @default(false)
+  waitlistEnabled Boolean      @default(false)
+  showGuestList  Boolean       @default(false)
   timezone       String?
+
+  // Novos campos essenciais
+  category       EventCategory @default(OUTRO)
+  eventType      EventType     @default(PRESENCIAL)
+  price          Float         @default(0) // 0 = gratuito
+  minAge         Int?
+  imageUrl       String?
+  onlineUrl      String?
+  tags           String?       // JSON array ou string separada por vírgulas
+
+  // Moderation system
+  isHidden       Boolean       @default(false)
+  hiddenReason   String?
+  hiddenAt       DateTime?
+  reportCount    Int           @default(0)
+
   ownerId        String
-  owner          User     @relation("OwnerEvents", fields: [ownerId], references: [id])
+  owner          User          @relation("OwnerEvents", fields: [ownerId], references: [id])
   guests         Guest[]
   announcements  Announcement[]
-  createdAt      DateTime @default(now())
+  messages       Message[]
+  reports        Report[]
+  createdAt      DateTime      @default(now())
 }
 
 model Guest {
@@ -63,4 +141,48 @@ model Announcement {
   event     Event    @relation(fields: [eventId], references: [id])
   createdBy String
   createdAt DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  content    String
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  eventId    String
+  event      Event    @relation(fields: [eventId], references: [id])
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model Report {
+  id         String       @id @default(uuid())
+  eventId    String
+  event      Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reportedBy String
+  reporter   User         @relation("ReportedBy", fields: [reportedBy], references: [id])
+  reason     ReportReason
+  details    String?
+  status     ReportStatus @default(PENDING)
+  reviewedBy String?
+  reviewedAt DateTime?
+  reviewNotes String?
+  createdAt  DateTime     @default(now())
+
+  @@unique([eventId, reportedBy]) // Um usuário só pode denunciar cada evento uma vez
+}
+
+model Penalty {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  type      PenaltyType
+  reason    String
+  details   String?
+  duration  Int?        // dias (null = permanente para BAN)
+  expiresAt DateTime?
+  isActive  Boolean     @default(true)
+  createdBy String      // ID do admin que aplicou
+  createdAt DateTime    @default(now())
 }

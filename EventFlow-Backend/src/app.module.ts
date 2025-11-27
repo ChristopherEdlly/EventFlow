@@ -5,6 +5,7 @@ import { EventsModule } from './events/events.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
+import { ModerationModule } from './moderation/moderation.module';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
 
@@ -20,6 +21,7 @@ import { validationSchema } from './config/validation';
     HealthModule,
     EventsModule,
     AuthModule,
+    ModerationModule,
   ],
 })
 export class AppModule {}
