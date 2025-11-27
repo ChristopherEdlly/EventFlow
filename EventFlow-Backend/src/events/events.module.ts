@@ -3,8 +3,10 @@ import { EventsController } from './events.controller';
 import { EventsArchiverService } from './events-archiver.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
+  imports: [MailModule],
   controllers: [EventsController],
   providers: [PrismaService, JwtAuthGuard, EventsArchiverService],
 })

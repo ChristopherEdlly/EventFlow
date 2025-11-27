@@ -208,6 +208,29 @@ class EventsService {
   async deleteAnnouncement(eventId: string, announcementId: string): Promise<{ message: string }> {
     return api.delete<{ message: string }>(`/events/${eventId}/announcements/${announcementId}`);
   }
+
+  // ============== EMAIL METHODS ==============
+
+  /**
+   * Resend invitation email to a specific guest
+   */
+  async sendInviteToGuest(eventId: string, guestId: string): Promise<{ message: string }> {
+    return api.post<{ message: string }>(`/events/${eventId}/guests/${guestId}/send-invite`, {});
+  }
+
+  /**
+   * Send reminder email to a specific guest
+   */
+  async sendReminderToGuest(eventId: string, guestId: string): Promise<{ message: string }> {
+    return api.post<{ message: string }>(`/events/${eventId}/guests/${guestId}/send-reminder`, {});
+  }
+
+  /**
+   * Send reminder emails to all guests of an event
+   */
+  async sendBulkReminders(eventId: string): Promise<{ message: string; sent: number; failed: number }> {
+    return api.post<{ message: string; sent: number; failed: number }>(`/events/${eventId}/send-bulk-reminders`, {});
+  }
 }
 
 export const eventsService = new EventsService();
