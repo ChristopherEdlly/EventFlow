@@ -3,7 +3,12 @@ import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
-  // PrismaClient lê do .env automaticamente, sem construtor customizado
+  constructor() {
+    super({
+      // Use WASM engine for compatibility in environments where native binaries are blocked
+      engineType: 'wasm' as any,
+    });
+  }
 
   async onModuleInit() {
     await this.$connect();
