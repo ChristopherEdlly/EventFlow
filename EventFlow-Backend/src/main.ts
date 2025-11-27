@@ -38,28 +38,8 @@ async function bootstrap() {
   );
 
   // CORS Configuration - Always enable to avoid intermittent issues
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:3002',
-    'http://localhost:8080',
-    'https://event-flow-rouge-one.vercel.app',
-    process.env.CORS_ORIGIN,
-  ].filter(Boolean);
-
   app.enableCors({
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-      // Allow requests with no origin (like mobile apps or curl)
-      if (!origin) return callback(null, true);
-
-      // Check if origin is in allowed list
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.warn(`CORS blocked origin: ${origin}`);
-        callback(null, false);
-      }
-    },
+    origin: true, // Libera todas as origens para desenvolvimento
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
@@ -67,8 +47,7 @@ async function bootstrap() {
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
-
-  console.log(`CORS enabled for origins: ${allowedOrigins.join(', ')}`);
+  console.log('CORS liberado para todas as origens (dev)');
 
   // Global filters and interceptors
   app.useGlobalFilters(new AllExceptionsFilter());
