@@ -10,6 +10,26 @@ datasource db {
   url      = env("SQLITE_DATABASE_URL")
 }
 
+enum EventType {
+  PRESENCIAL
+  ONLINE
+  HIBRIDO
+}
+
+enum EventCategory {
+  CONFERENCIA
+  WORKSHOP
+  PALESTRA
+  FESTA
+  ESPORTIVO
+  CULTURAL
+  EDUCACIONAL
+  NETWORKING
+  CORPORATIVO
+  BENEFICENTE
+  OUTRO
+}
+
 model User {
   id        String   @id @default(uuid())
   name      String
@@ -21,7 +41,7 @@ model User {
 }
 
 model Event {
-  id             String   @id @default(uuid())
+  id             String        @id @default(uuid())
   title          String
   description    String?
   date           DateTime
@@ -30,17 +50,27 @@ model Event {
   endTime        String?
   location       String
   visibility     String
-  availability   String   @default("PUBLISHED") // PUBLISHED, ARCHIVED, COMPLETED
+  availability   String        @default("PUBLISHED") // PUBLISHED, ARCHIVED, COMPLETED
   rsvpDeadline   DateTime?
   capacity       Int?
-  waitlistEnabled Boolean @default(false)
-  showGuestList  Boolean @default(false)
+  waitlistEnabled Boolean      @default(false)
+  showGuestList  Boolean       @default(false)
   timezone       String?
+
+  // Novos campos essenciais
+  category       EventCategory @default(OUTRO)
+  eventType      EventType     @default(PRESENCIAL)
+  price          Float         @default(0) // 0 = gratuito
+  minAge         Int?
+  imageUrl       String?
+  onlineUrl      String?
+  tags           String?       // JSON array ou string separada por vírgulas
+
   ownerId        String
-  owner          User     @relation("OwnerEvents", fields: [ownerId], references: [id])
+  owner          User          @relation("OwnerEvents", fields: [ownerId], references: [id])
   guests         Guest[]
   announcements  Announcement[]
-  createdAt      DateTime @default(now())
+  createdAt      DateTime      @default(now())
 }
 
 model Guest {

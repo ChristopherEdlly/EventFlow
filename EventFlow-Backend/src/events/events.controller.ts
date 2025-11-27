@@ -28,6 +28,14 @@ const EventCreateSchema = z.object({
   capacity: z.number().int().positive().nullable().optional(),
   allowWaitlist: z.boolean().optional(),
   requireApproval: z.boolean().optional(),
+  // Novos campos
+  category: z.enum(['CONFERENCIA', 'WORKSHOP', 'PALESTRA', 'FESTA', 'ESPORTIVO', 'CULTURAL', 'EDUCACIONAL', 'NETWORKING', 'CORPORATIVO', 'BENEFICENTE', 'OUTRO']).optional(),
+  eventType: z.enum(['PRESENCIAL', 'ONLINE', 'HIBRIDO']).optional(),
+  price: z.number().min(0).optional(),
+  minAge: z.number().int().min(0).max(120).nullable().optional(),
+  imageUrl: z.string().url().nullable().optional(),
+  onlineUrl: z.string().url().nullable().optional(),
+  tags: z.string().nullable().optional(),
 });
 
 const EventUpdateSchema = z.object({
@@ -46,6 +54,14 @@ const EventUpdateSchema = z.object({
   cancelledReason: z.string().optional().nullable(),
   revision: z.number().int().optional(),
   availability: z.enum(['PUBLISHED', 'ARCHIVED', 'COMPLETED', 'CANCELLED']).optional(),
+  // Novos campos
+  category: z.enum(['CONFERENCIA', 'WORKSHOP', 'PALESTRA', 'FESTA', 'ESPORTIVO', 'CULTURAL', 'EDUCACIONAL', 'NETWORKING', 'CORPORATIVO', 'BENEFICENTE', 'OUTRO']).optional(),
+  eventType: z.enum(['PRESENCIAL', 'ONLINE', 'HIBRIDO']).optional(),
+  price: z.number().min(0).optional(),
+  minAge: z.number().int().min(0).max(120).nullable().optional(),
+  imageUrl: z.string().url().nullable().optional(),
+  onlineUrl: z.string().url().nullable().optional(),
+  tags: z.string().nullable().optional(),
 });
 
 @Controller('events')
@@ -75,6 +91,14 @@ export class EventsController {
         waitlistEnabled: true,
         showGuestList: true,
         timezone: true,
+        // Novos campos
+        category: true,
+        eventType: true,
+        price: true,
+        minAge: true,
+        imageUrl: true,
+        onlineUrl: true,
+        tags: true,
         ownerId: true,
         createdAt: true,
       },
@@ -107,6 +131,14 @@ export class EventsController {
         waitlistEnabled: true,
         showGuestList: true,
         timezone: true,
+        // Novos campos
+        category: true,
+        eventType: true,
+        price: true,
+        minAge: true,
+        imageUrl: true,
+        onlineUrl: true,
+        tags: true,
         ownerId: true,
         createdAt: true,
       },
@@ -165,7 +197,10 @@ export class EventsController {
     const parsed = EventCreateSchema.safeParse(body);
     if (!parsed.success) throw new BadRequestException(parsed.error.flatten());
 
-    const { title, description, date, time, location, visibility, availability, capacity, allowWaitlist, requireApproval } = parsed.data;
+    const {
+      title, description, date, time, location, visibility, availability, capacity, allowWaitlist, requireApproval,
+      category, eventType, price, minAge, imageUrl, onlineUrl, tags
+    } = parsed.data;
 
     // Se não especificado, eventos públicos começam como 'PUBLISHED', privados não aparecem na lista pública
     const event = await this.prisma.event.create({
@@ -180,6 +215,14 @@ export class EventsController {
         capacity: capacity || null,
         waitlistEnabled: allowWaitlist || false,
         showGuestList: requireApproval || false,
+        // Novos campos
+        category: category || 'OUTRO',
+        eventType: eventType || 'PRESENCIAL',
+        price: price !== undefined ? price : 0,
+        minAge: minAge || null,
+        imageUrl: imageUrl || null,
+        onlineUrl: onlineUrl || null,
+        tags: tags || null,
         ownerId: uid,
       },
       include: {
@@ -250,6 +293,14 @@ export class EventsController {
       timezone,
       notifyGuests,
       cancelledReason,
+      // Novos campos
+      category,
+      eventType,
+      price,
+      minAge,
+      imageUrl,
+      onlineUrl,
+      tags,
       // availability removido, pois é controlado por newAvailability
     } = parsed.data;
 
@@ -314,6 +365,14 @@ export class EventsController {
       timezone,
       cancelledReason: typeof cancelledReason !== 'undefined' ? cancelledReason || null : undefined,
       availability: newAvailability,
+      // Novos campos
+      category: category !== undefined ? category : undefined,
+      eventType: eventType !== undefined ? eventType : undefined,
+      price: price !== undefined ? price : undefined,
+      minAge: typeof minAge !== 'undefined' ? minAge : undefined,
+      imageUrl: typeof imageUrl !== 'undefined' ? imageUrl : undefined,
+      onlineUrl: typeof onlineUrl !== 'undefined' ? onlineUrl : undefined,
+      tags: typeof tags !== 'undefined' ? tags : undefined,
     };
     const updated = await this.prisma.event.update({
       where: { id },
