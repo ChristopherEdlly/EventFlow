@@ -21,6 +21,14 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
     endTime: '',
     state: 'DRAFT' as const,
     visibility: 'PUBLIC' as const,
+    // Novos campos
+    category: 'OUTRO' as const,
+    eventType: 'PRESENCIAL' as const,
+    price: 0,
+    minAge: '',
+    imageUrl: '',
+    onlineUrl: '',
+    tags: '',
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -46,6 +54,14 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
         endTime: formData.endTime || undefined,
         location: formData.location,
         visibility: formData.visibility,
+        // Novos campos
+        category: formData.category,
+        eventType: formData.eventType,
+        price: formData.price,
+        minAge: formData.minAge ? parseInt(formData.minAge) : undefined,
+        imageUrl: formData.imageUrl || undefined,
+        onlineUrl: formData.onlineUrl || undefined,
+        tags: formData.tags || undefined,
       });
       onBack();
     } catch (err) {
@@ -185,6 +201,132 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Informações Adicionais */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">Informações Adicionais</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Categoria */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Categoria
+              </label>
+              <select
+                value={formData.category}
+                onChange={(e) => handleChange('category', e.target.value)}
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="CONFERENCIA">Conferência</option>
+                <option value="WORKSHOP">Workshop</option>
+                <option value="PALESTRA">Palestra</option>
+                <option value="FESTA">Festa</option>
+                <option value="ESPORTIVO">Esportivo</option>
+                <option value="CULTURAL">Cultural</option>
+                <option value="EDUCACIONAL">Educacional</option>
+                <option value="NETWORKING">Networking</option>
+                <option value="CORPORATIVO">Corporativo</option>
+                <option value="BENEFICENTE">Beneficente</option>
+                <option value="OUTRO">Outro</option>
+              </select>
+            </div>
+
+            {/* Modalidade */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Modalidade
+              </label>
+              <select
+                value={formData.eventType}
+                onChange={(e) => handleChange('eventType', e.target.value)}
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="PRESENCIAL">Presencial</option>
+                <option value="ONLINE">Online</option>
+                <option value="HIBRIDO">Híbrido</option>
+              </select>
+            </div>
+
+            {/* Preço */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Preço (R$)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => handleChange('price', e.target.value)}
+                placeholder="0.00"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-xs text-gray-500">Use 0 para eventos gratuitos</p>
+            </div>
+
+            {/* Idade Mínima */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Idade Mínima
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="120"
+                value={formData.minAge}
+                onChange={(e) => handleChange('minAge', e.target.value)}
+                placeholder="Opcional"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Link Online (aparece só se for ONLINE ou HÍBRIDO) */}
+          {(formData.eventType === 'ONLINE' || formData.eventType === 'HIBRIDO') && (
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Link Online {formData.eventType === 'ONLINE' && <span className="text-red-500">*</span>}
+              </label>
+              <input
+                type="url"
+                value={formData.onlineUrl}
+                onChange={(e) => handleChange('onlineUrl', e.target.value)}
+                placeholder="https://meet.google.com/abc-defg-hij"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                required={formData.eventType === 'ONLINE'}
+              />
+            </div>
+          )}
+
+          {/* URL da Imagem */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              URL da Imagem/Banner
+            </label>
+            <input
+              type="url"
+              value={formData.imageUrl}
+              onChange={(e) => handleChange('imageUrl', e.target.value)}
+              placeholder="https://exemplo.com/imagem.jpg"
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Tags */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tags
+            </label>
+            <input
+              type="text"
+              value={formData.tags}
+              onChange={(e) => handleChange('tags', e.target.value)}
+              placeholder="Ex: tecnologia, networking, gratuito"
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+            <p className="mt-1 text-xs text-gray-500">Separe as tags por vírgula</p>
           </div>
         </div>
 

@@ -22,6 +22,14 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
     waitlistEnabled: event.waitlistEnabled || false,
     showGuestList: event.showGuestList || false,
     timezone: event.timezone || '',
+    // Novos campos
+    category: event.category,
+    eventType: event.eventType,
+    price: event.price,
+    minAge: event.minAge || undefined,
+    imageUrl: event.imageUrl || '',
+    onlineUrl: event.onlineUrl || '',
+    tags: event.tags || '',
   });
   const [status, setStatus] = useState(event.availability || 'PUBLISHED');
   const [isLoading, setIsLoading] = useState(false);
@@ -241,6 +249,119 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
               placeholder="Número máximo de pessoas"
             />
           </div>
+
+          {/* Novos Campos */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Categoria
+              </label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                className="w-full px-4 py-3 bg-white text-neutral-900 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+              >
+                <option value="CONFERENCIA">Conferência</option>
+                <option value="WORKSHOP">Workshop</option>
+                <option value="PALESTRA">Palestra</option>
+                <option value="FESTA">Festa</option>
+                <option value="ESPORTIVO">Esportivo</option>
+                <option value="CULTURAL">Cultural</option>
+                <option value="EDUCACIONAL">Educacional</option>
+                <option value="NETWORKING">Networking</option>
+                <option value="CORPORATIVO">Corporativo</option>
+                <option value="BENEFICENTE">Beneficente</option>
+                <option value="OUTRO">Outro</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Modalidade
+              </label>
+              <select
+                value={formData.eventType}
+                onChange={(e) => setFormData({ ...formData, eventType: e.target.value as any })}
+                className="w-full px-4 py-3 bg-white text-neutral-900 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+              >
+                <option value="PRESENCIAL">Presencial</option>
+                <option value="ONLINE">Online</option>
+                <option value="HIBRIDO">Híbrido</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Preço (R$)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                className="w-full px-4 py-3 bg-white text-neutral-900 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Idade Mínima
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="120"
+                value={formData.minAge || ''}
+                onChange={(e) => setFormData({ ...formData, minAge: e.target.value ? parseInt(e.target.value) : undefined })}
+                className="w-full px-4 py-3 bg-white text-neutral-900 placeholder-neutral-400 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                placeholder="Opcional"
+              />
+            </div>
+          </div>
+
+          {(formData.eventType === 'ONLINE' || formData.eventType === 'HIBRIDO') && (
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Link Online
+              </label>
+              <input
+                type="url"
+                value={formData.onlineUrl}
+                onChange={(e) => setFormData({ ...formData, onlineUrl: e.target.value })}
+                className="w-full px-4 py-3 bg-white text-neutral-900 placeholder-neutral-400 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                placeholder="https://meet.google.com/abc-defg-hij"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              URL da Imagem/Banner
+            </label>
+            <input
+              type="url"
+              value={formData.imageUrl}
+              onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+              className="w-full px-4 py-3 bg-white text-neutral-900 placeholder-neutral-400 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+              placeholder="https://exemplo.com/imagem.jpg"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Tags
+            </label>
+            <input
+              type="text"
+              value={formData.tags}
+              onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+              className="w-full px-4 py-3 bg-white text-neutral-900 placeholder-neutral-400 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+              placeholder="Ex: tecnologia, networking, gratuito"
+            />
+          </div>
+
           <div className="flex gap-3 pt-4">
             <button
               type="button"
