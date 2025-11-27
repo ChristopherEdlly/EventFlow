@@ -75,7 +75,7 @@ export default function RegisterPage({
       </div>
 
       {/* Logo + Título no topo, fora do container */}
-      <div className="relative z-20 pt-8 pb-6">
+      <div className="relative z-20 pt-4 pb-2">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -92,10 +92,10 @@ export default function RegisterPage({
               repeat: Infinity,
               ease: 'easeInOut',
             }}
-            className="inline-flex items-center justify-center w-16 h-16 lg:w-20 lg:h-20 bg-white/25 backdrop-blur-lg rounded-2xl shadow-2xl mb-3 border border-white/30"
+            className="inline-flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 bg-white/25 backdrop-blur-lg rounded-2xl shadow-2xl mb-2 border border-white/30"
           >
             <svg
-              className="w-9 h-9 lg:w-11 lg:h-11 text-white"
+              className="w-7 h-7 lg:w-8 lg:h-8 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -108,8 +108,8 @@ export default function RegisterPage({
               />
             </svg>
           </motion.div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-white mb-1">EventFlow</h1>
-          <p className="text-white/90 text-sm lg:text-base">Simplifique a gestão dos seus eventos</p>
+          <h1 className="text-xl lg:text-2xl font-bold text-white mb-0.5">EventFlow</h1>
+          <p className="text-white/90 text-xs lg:text-sm">Simplifique a gestão dos seus eventos</p>
         </motion.div>
       </div>
 
@@ -123,23 +123,23 @@ export default function RegisterPage({
         >
           {/* Container glassmorphism */}
           <div className="bg-white/10 backdrop-blur-2xl rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.3)] border border-white/20 overflow-hidden">
-            <div className="flex flex-col lg:flex-row min-h-[600px]">
+            <div className="flex flex-col lg:flex-row min-h-[450px]">
               {/* Coluna esquerda - InfoPanel (oculta no mobile) */}
               <div className="hidden lg:flex lg:w-1/2 border-r border-white/20">
                 <InfoPanel />
               </div>
 
               {/* Coluna direita - Formulário de Registro */}
-              <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-10">
+              <div className="w-full lg:w-1/2 flex items-center justify-center p-4 lg:p-6">
                 <div className="w-full max-w-md">
                   {/* Card branco do formulário */}
-                  <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8">
+                  <div className="bg-white rounded-2xl shadow-xl p-5 lg:p-6">
                     {/* Header */}
                     <motion.div
                       variants={container}
                       initial="hidden"
                       animate="show"
-                      className="mb-5"
+                      className="mb-4"
                     >
                       <motion.h2
                         variants={item}
@@ -181,7 +181,7 @@ export default function RegisterPage({
                       initial="hidden"
                       animate="show"
                       onSubmit={handleSubmit}
-                      className="space-y-3"
+                      className="space-y-2.5"
                     >
                       {/* Nome completo - Full Width */}
                       <motion.div variants={item}>
@@ -238,7 +238,7 @@ export default function RegisterPage({
                       </motion.div>
 
                       {/* Senha e Confirmar Senha - Grid 2 colunas (Desktop) / Vertical (Mobile) */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                         {/* Password Input */}
                         <motion.div variants={item}>
                           <label
@@ -376,7 +376,7 @@ export default function RegisterPage({
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.8 }}
-                      className="mt-5 relative"
+                      className="mt-4 relative"
                     >
                       <div className="absolute inset-0 flex items-center">
                         <div className="w-full border-t border-gray-200"></div>

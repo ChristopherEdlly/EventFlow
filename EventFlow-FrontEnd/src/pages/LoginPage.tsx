@@ -58,7 +58,7 @@ export default function LoginPage({ onLogin, onNavigateToRegister }: LoginPagePr
       </div>
 
       {/* Logo + Título no topo, fora do container */}
-      <div className="relative z-20 pt-8 pb-6">
+      <div className="relative z-20 pt-4 pb-2">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -75,10 +75,10 @@ export default function LoginPage({ onLogin, onNavigateToRegister }: LoginPagePr
               repeat: Infinity,
               ease: 'easeInOut',
             }}
-            className="inline-flex items-center justify-center w-16 h-16 lg:w-20 lg:h-20 bg-white/25 backdrop-blur-lg rounded-2xl shadow-2xl mb-3 border border-white/30"
+            className="inline-flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 bg-white/25 backdrop-blur-lg rounded-2xl shadow-2xl mb-2 border border-white/30"
           >
             <svg
-              className="w-9 h-9 lg:w-11 lg:h-11 text-white"
+              className="w-7 h-7 lg:w-8 lg:h-8 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -91,8 +91,8 @@ export default function LoginPage({ onLogin, onNavigateToRegister }: LoginPagePr
               />
             </svg>
           </motion.div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-white mb-1">EventFlow</h1>
-          <p className="text-white/90 text-sm lg:text-base">Simplifique a gestão dos seus eventos</p>
+          <h1 className="text-xl lg:text-2xl font-bold text-white mb-0.5">EventFlow</h1>
+          <p className="text-white/90 text-xs lg:text-sm">Simplifique a gestão dos seus eventos</p>
         </motion.div>
       </div>
 
@@ -106,23 +106,23 @@ export default function LoginPage({ onLogin, onNavigateToRegister }: LoginPagePr
         >
           {/* Container glassmorphism */}
           <div className="bg-white/10 backdrop-blur-2xl rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.3)] border border-white/20 overflow-hidden">
-            <div className="flex flex-col lg:flex-row min-h-[600px]">
+            <div className="flex flex-col lg:flex-row min-h-[450px]">
               {/* Coluna esquerda - InfoPanel (oculta no mobile) */}
               <div className="hidden lg:flex lg:w-1/2 border-r border-white/20">
                 <InfoPanel />
               </div>
 
               {/* Coluna direita - Formulário de Login */}
-              <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-10">
+              <div className="w-full lg:w-1/2 flex items-center justify-center p-4 lg:p-6">
                 <div className="w-full max-w-md">
                   {/* Card branco do formulário */}
-                  <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8">
+                  <div className="bg-white rounded-2xl shadow-xl p-5 lg:p-6">
                     {/* Header */}
                     <motion.div
                       variants={container}
                       initial="hidden"
                       animate="show"
-                      className="mb-6"
+                      className="mb-4"
                     >
                       <motion.h2
                         variants={item}
@@ -164,7 +164,7 @@ export default function LoginPage({ onLogin, onNavigateToRegister }: LoginPagePr
                       initial="hidden"
                       animate="show"
                       onSubmit={handleSubmit}
-                      className="space-y-4"
+                      className="space-y-3"
                     >
                       {/* Email Input */}
                       <motion.div variants={item}>
@@ -186,7 +186,7 @@ export default function LoginPage({ onLogin, onNavigateToRegister }: LoginPagePr
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="w-full pl-10 pr-3 py-2.5 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none hover:border-gray-300"
+                            className="w-full pl-10 pr-3 py-2 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none hover:border-gray-300"
                             placeholder="seu@email.com"
                             disabled={isLoading}
                           />
@@ -213,7 +213,7 @@ export default function LoginPage({ onLogin, onNavigateToRegister }: LoginPagePr
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            className="w-full pl-10 pr-10 py-2.5 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none hover:border-gray-300"
+                            className="w-full pl-10 pr-10 py-2 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none hover:border-gray-300"
                             placeholder="••••••••"
                             disabled={isLoading}
                           />
