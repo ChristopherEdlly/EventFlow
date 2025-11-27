@@ -10,60 +10,12 @@ datasource db {
   url      = env("SQLITE_DATABASE_URL")
 }
 
-enum EventType {
-  PRESENCIAL
-  ONLINE
-  HIBRIDO
-}
-
-enum EventCategory {
-  CONFERENCIA
-  WORKSHOP
-  PALESTRA
-  FESTA
-  ESPORTIVO
-  CULTURAL
-  EDUCACIONAL
-  NETWORKING
-  CORPORATIVO
-  BENEFICENTE
-  OUTRO
-}
-
-enum UserRole {
-  USER
-  ADMIN
-}
-
-enum ReportReason {
-  SPAM
-  INAPPROPRIATE
-  FRAUD
-  SCAM
-  MISLEADING
-  HARASSMENT
-  OTHER
-}
-
-enum ReportStatus {
-  PENDING
-  REVIEWED
-  ACCEPTED
-  REJECTED
-}
-
-enum PenaltyType {
-  WARNING
-  SUSPENSION
-  BAN
-}
-
 model User {
   id               String    @id @default(uuid())
   name             String
   email            String    @unique
   password         String
-  role             UserRole  @default(USER)
+  role             String    @default("USER") // USER, ADMIN
 
   // Ban system
   isBanned         Boolean   @default(false)
@@ -98,8 +50,8 @@ model Event {
   timezone       String?
 
   // Novos campos essenciais
-  category       EventCategory @default(OUTRO)
-  eventType      EventType     @default(PRESENCIAL)
+  category       String        @default("OUTRO") // CONFERENCIA, WORKSHOP, PALESTRA, FESTA, ESPORTIVO, CULTURAL, EDUCACIONAL, NETWORKING, CORPORATIVO, BENEFICENTE, OUTRO
+  eventType      String        @default("PRESENCIAL") // PRESENCIAL, ONLINE, HIBRIDO
   price          Float         @default(0) // 0 = gratuito
   minAge         Int?
   imageUrl       String?
@@ -162,9 +114,9 @@ model Report {
   event      Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
   reportedBy String
   reporter   User         @relation("ReportedBy", fields: [reportedBy], references: [id])
-  reason     ReportReason
+  reason     String // SPAM, INAPPROPRIATE, FRAUD, SCAM, MISLEADING, HARASSMENT, OTHER
   details    String?
-  status     ReportStatus @default(PENDING)
+  status     String @default("PENDING") // PENDING, REVIEWED, ACCEPTED, REJECTED
   reviewedBy String?
   reviewedAt DateTime?
   reviewNotes String?
@@ -177,7 +129,7 @@ model Penalty {
   id        String      @id @default(uuid())
   userId    String
   user      User        @relation(fields: [userId], references: [id])
-  type      PenaltyType
+  type      String // WARNING, SUSPENSION, BAN
   reason    String
   details   String?
   duration  Int?        // dias (null = permanente para BAN)
