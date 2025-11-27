@@ -31,13 +31,15 @@ enum EventCategory {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  events    Event[]  @relation("OwnerEvents")
-  guests    Guest[]
-  createdAt DateTime @default(now())
+  id             String    @id @default(uuid())
+  name           String
+  email          String    @unique
+  password       String
+  events         Event[]   @relation("OwnerEvents")
+  guests         Guest[]
+  sentMessages   Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  createdAt      DateTime  @default(now())
 }
 
 model Event {
@@ -70,6 +72,7 @@ model Event {
   owner          User          @relation("OwnerEvents", fields: [ownerId], references: [id])
   guests         Guest[]
   announcements  Announcement[]
+  messages       Message[]
   createdAt      DateTime      @default(now())
 }
 
@@ -93,4 +96,17 @@ model Announcement {
   event     Event    @relation(fields: [eventId], references: [id])
   createdBy String
   createdAt DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  content    String
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  eventId    String
+  event      Event    @relation(fields: [eventId], references: [id])
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
 }
