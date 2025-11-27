@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { eventsService, type Event, type Guest } from '../services/events';
 import { api } from '../services/api';
 import EditEventModal from '../components/EditEventModal';
+import { MessageThread } from '../components/MessageThread';
+import { ConversationList } from '../components/ConversationList';
 
 interface EventDetailsPageProps {
   eventId: string;
@@ -23,6 +25,9 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
   const [currentUserGuest, setCurrentUserGuest] = useState<Guest | null>(null);
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showMessageThread, setShowMessageThread] = useState(false);
+  const [showConversationList, setShowConversationList] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
 
   useEffect(() => {
     loadData();
@@ -37,6 +42,7 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
       try {
         const profile = await api.getProfile();
         setCurrentUserEmail(profile.email);
+        setCurrentUserId(profile.id);
 
         const eventData = await eventsService.getEvent(eventId);
         setEvent(eventData as Event);
@@ -231,18 +237,29 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <div className="text-sm font-medium text-gray-600 mb-1">Ações Rápidas</div>
             <div className="space-y-2 mt-2">
-              <div className="flex gap-2">
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="flex-1 px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white text-xs font-medium rounded-lg transition-colors"
+                  >
+                    Editar Evento
+                  </button>
+                  <button
+                    onClick={() => alert('Funcionalidade de exportação em desenvolvimento. Em breve você poderá exportar a lista de convidados em CSV ou PDF.')}
+                    className="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Exportar Lista
+                  </button>
+                </div>
                 <button
-                  onClick={() => setIsEditModalOpen(true)}
-                  className="flex-1 px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white text-xs font-medium rounded-lg transition-colors"
+                  onClick={() => setShowConversationList(true)}
+                  className="w-full px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
-                  Editar Evento
-                </button>
-                <button
-                  onClick={() => alert('Funcionalidade de exportação em desenvolvimento. Em breve você poderá exportar a lista de convidados em CSV ou PDF.')}
-                  className="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Exportar Lista
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  Ver Mensagens
                 </button>
               </div>
 
@@ -376,6 +393,21 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
               {registerSuccess && <p className="mt-2 text-success-600 text-sm">{registerSuccess}</p>}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Botão de mensagem para participantes */}
+      {!isOwner && currentUserGuest && (
+        <div className="mb-6">
+          <button
+            onClick={() => setShowMessageThread(true)}
+            className="w-full px-6 py-3 bg-white border-2 border-blue-500 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            Enviar mensagem ao organizador
+          </button>
         </div>
       )}
 
@@ -545,6 +577,25 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
             loadData();
             setIsEditModalOpen(false);
           }}
+        />
+      )}
+
+      {/* Modal de Mensagem para Participantes */}
+      {showMessageThread && event && !isOwner && (
+        <MessageThread
+          eventId={eventId}
+          otherUserId={event.ownerId}
+          otherUserName="Organizador"
+          onClose={() => setShowMessageThread(false)}
+          isOrganizer={false}
+        />
+      )}
+
+      {/* Modal de Conversas para Organizadores */}
+      {showConversationList && isOwner && (
+        <ConversationList
+          eventId={eventId}
+          onClose={() => setShowConversationList(false)}
         />
       )}
     </div>
