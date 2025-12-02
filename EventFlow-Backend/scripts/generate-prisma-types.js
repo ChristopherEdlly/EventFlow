@@ -1,12 +1,30 @@
 #!/usr/bin/env node
 /**
- * Script to generate Prisma Client types when prisma generate fails
- * This is a workaround for environments where Prisma binary downloads are blocked
+ * Script to generate Prisma Client when prisma generate fails
+ * Tries to run prisma generate first, then falls back to custom types
  */
 
+const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+// Try to run prisma generate first
+try {
+  console.log('Attempting to generate Prisma Client...');
+  execSync('npx prisma generate', {
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING: '1'
+    }
+  });
+  console.log('✅ Prisma Client generated successfully!');
+  process.exit(0);
+} catch (error) {
+  console.log('⚠️  Prisma generate failed, using custom types fallback...');
+}
+
+// Fallback: Generate custom types
 const typesContent = `/**
  * Prisma Client - Custom generated types for EventFlow
  * Flexible types to support all schema fields
