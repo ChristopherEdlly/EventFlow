@@ -15,12 +15,14 @@ import HistoryPage from './pages/HistoryPage';
 import MyEventsPage from './pages/MyEventsPage';
 import NewEventPage from './pages/NewEventPage';
 import GuestsPage from './pages/GuestsPage';
+import ModerationPage from './pages/ModerationPage';
 
 
 interface UserProfile {
   id: string;
   name: string;
   email: string;
+  role: string;
 }
 
 // Componente wrapper para páginas autenticadas
@@ -121,6 +123,7 @@ function AppRoutes() {
       'profile': '/profile',
       'settings': '/settings',
       'history': '/history',
+      'moderation': '/moderation',
     };
     navigate(routeMap[page] || '/');
   };
@@ -169,6 +172,7 @@ function AppRoutes() {
               onNavigate={handleNavigate}
               onLogout={handleLogout}
               userName={userProfile?.name}
+              userRole={userProfile?.role}
             >
               <HomePage onViewEvent={handleViewEvent} onNavigate={handleNavigate} />
             </Layout>
@@ -185,6 +189,7 @@ function AppRoutes() {
               onNavigate={handleNavigate}
               onLogout={handleLogout}
               userName={userProfile?.name}
+              userRole={userProfile?.role}
             >
               <DashboardPage onViewEvent={handleViewEvent} />
             </Layout>
@@ -201,6 +206,7 @@ function AppRoutes() {
               onNavigate={handleNavigate}
               onLogout={handleLogout}
               userName={userProfile?.name}
+              userRole={userProfile?.role}
             >
               <NewEventPage onBack={() => navigate('/my-events')} />
             </Layout>
@@ -217,6 +223,7 @@ function AppRoutes() {
               onNavigate={handleNavigate}
               onLogout={handleLogout}
               userName={userProfile?.name}
+              userRole={userProfile?.role}
             >
               <PublicEventsPage
                 onBack={() => navigate('/')}
@@ -236,6 +243,7 @@ function AppRoutes() {
               onNavigate={handleNavigate}
               onLogout={handleLogout}
               userName={userProfile?.name}
+              userRole={userProfile?.role}
             >
               <MyInvitesPage
                 onBack={() => navigate('/')}
@@ -255,6 +263,7 @@ function AppRoutes() {
               onNavigate={handleNavigate}
               onLogout={handleLogout}
               userName={userProfile?.name}
+              userRole={userProfile?.role}
             >
               <MyEventsPage onViewEvent={handleViewEvent} />
             </Layout>
@@ -271,6 +280,7 @@ function AppRoutes() {
               onNavigate={handleNavigate}
               onLogout={handleLogout}
               userName={userProfile?.name}
+              userRole={userProfile?.role}
             >
               <EventDetailsWrapper onBack={() => navigate(-1)} />
             </Layout>
@@ -287,6 +297,7 @@ function AppRoutes() {
               onNavigate={handleNavigate}
               onLogout={handleLogout}
               userName={userProfile?.name}
+              userRole={userProfile?.role}
             >
               <GuestsWrapper onBack={() => navigate(-1)} />
             </Layout>
@@ -303,6 +314,7 @@ function AppRoutes() {
               onNavigate={handleNavigate}
               onLogout={handleLogout}
               userName={userProfile?.name}
+              userRole={userProfile?.role}
             >
               <ProfilePage onBack={() => navigate('/')} />
             </Layout>
@@ -310,7 +322,22 @@ function AppRoutes() {
         }
       />
 
-
+      <Route
+        path="/moderation"
+        element={
+          <ProtectedRoute>
+            <Layout
+              currentPage="moderation"
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+              userName={userProfile?.name}
+              userRole={userProfile?.role}
+            >
+              <ModerationPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/history"
@@ -321,6 +348,7 @@ function AppRoutes() {
               onNavigate={handleNavigate}
               onLogout={handleLogout}
               userName={userProfile?.name}
+              userRole={userProfile?.role}
             >
               <HistoryPage
                 onBack={() => navigate('/')}

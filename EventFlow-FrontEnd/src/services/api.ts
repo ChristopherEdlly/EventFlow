@@ -152,11 +152,11 @@ class ApiClient {
     return this.token;
   }
 
-  async getProfile(): Promise<{ id: string; name: string; email: string; createdAt: string }> {
+  async getProfile(): Promise<{ id: string; name: string; email: string; role: string; createdAt: string }> {
     return this.get('/auth/profile');
   }
 
-  async updateProfile(data: { name?: string; email?: string }): Promise<{ id: string; name: string; email: string; createdAt: string }> {
+  async updateProfile(data: { name?: string; email?: string }): Promise<{ id: string; name: string; email: string; role: string; createdAt: string }> {
     return this.patch('/auth/profile', data);
   }
 
