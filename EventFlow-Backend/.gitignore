@@ -7,3 +7,7 @@ prisma/*.sqlite
 
 # If you have additional backend-only artifacts, add them below
 
+
+# Environment variables
+.env
+.env.local
