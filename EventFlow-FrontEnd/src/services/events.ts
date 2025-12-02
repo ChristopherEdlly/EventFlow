@@ -50,6 +50,18 @@ export interface Event {
   ownerId: string;
   createdAt: string;
   updatedAt: string;
+  // Owner info (quando incluído)
+  owner?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  // Alias para compatibilidade
+  organizer?: {
+    id: string;
+    name: string;
+    email: string;
+  };
   _count?: {
     guests: number;
   };

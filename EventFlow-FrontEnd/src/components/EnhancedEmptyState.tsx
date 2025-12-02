@@ -13,6 +13,7 @@ interface EmptyStateProps {
     onClick: () => void;
   };
   variant?: 'default' | 'simple' | 'illustrated';
+  illustration?: 'noEvents' | 'noInvites' | 'noResults' | 'error';
   size?: 'sm' | 'md' | 'lg';
 }
 
@@ -86,6 +87,7 @@ export default function EnhancedEmptyState({
   action,
   secondaryAction,
   variant = 'default',
+  illustration = 'noEvents',
   size = 'md',
 }: EmptyStateProps) {
   const sizeClasses = {
@@ -123,7 +125,7 @@ export default function EnhancedEmptyState({
         {/* Icon ou Ilustração */}
         {variant === 'illustrated' ? (
           <div className={`${sizes.illustration} mx-auto mb-6`}>
-            {icon || illustrations.noEvents}
+            {icon || illustrations[illustration] || illustrations.noEvents}
           </div>
         ) : icon ? (
           <div className={`${sizes.icon} mx-auto mb-6 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-2xl flex items-center justify-center`}>

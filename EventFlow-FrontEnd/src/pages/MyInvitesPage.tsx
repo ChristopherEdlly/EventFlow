@@ -166,7 +166,8 @@ export default function MyInvitesPage({ onBack, onViewEvent }: MyInvitesPageProp
       ) : invites.length === 0 ? (
         /* Empty State */
         <EnhancedEmptyState
-          variant="noInvites"
+          variant="illustrated"
+          illustration="noInvites"
           title="Nenhum convite recebido"
           description="Quando você for convidado para eventos privados, eles aparecerão aqui. Fique de olho!"
           size="lg"
@@ -214,7 +215,8 @@ export default function MyInvitesPage({ onBack, onViewEvent }: MyInvitesPageProp
           >
             {filteredInvites.length === 0 ? (
               <EnhancedEmptyState
-                variant="noResults"
+                variant="illustrated"
+                illustration="noResults"
                 title="Nenhum convite encontrado"
                 description={`Você não possui convites ${filter === 'pending' ? 'pendentes' : filter === 'accepted' ? 'aceitos' : 'recusados'}.`}
                 size="sm"

@@ -570,7 +570,7 @@ export default function GuestList({ guests, eventId, isOwner, onGuestsChanged, e
           setReminderGuest(null);
           setReminderMessage('');
         }}
-        variant="primary"
+        variant="info"
         isLoading={isSendingReminder}
       />
 

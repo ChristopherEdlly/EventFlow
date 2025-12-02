@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { eventsService } from '../services/events';
+import { eventsService, type EventCategory, type EventType } from '../services/events';
 import type { ApiError } from '../services/api';
 import GradientHeader from '../components/GradientHeader';
 
@@ -8,9 +8,29 @@ interface NewEventPageProps {
   onBack: () => void;
 }
 
+interface FormData {
+  title: string;
+  description: string;
+  organizer: string;
+  date: string;
+  endDate: string;
+  location: string;
+  time: string;
+  endTime: string;
+  state: 'DRAFT';
+  visibility: 'PUBLIC' | 'PRIVATE';
+  category: EventCategory;
+  eventType: EventType;
+  price: number;
+  minAge: string;
+  imageUrl: string;
+  onlineUrl: string;
+  tags: string;
+}
+
 export default function NewEventPage({ onBack }: NewEventPageProps) {
     const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
     organizer: '',
@@ -19,11 +39,11 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
     location: '',
     time: '',
     endTime: '',
-    state: 'DRAFT' as const,
-    visibility: 'PUBLIC' as const,
+    state: 'DRAFT',
+    visibility: 'PUBLIC',
     // Novos campos
-    category: 'OUTRO' as const,
-    eventType: 'PRESENCIAL' as const,
+    category: 'OUTRO',
+    eventType: 'PRESENCIAL',
     price: 0,
     minAge: '',
     imageUrl: '',

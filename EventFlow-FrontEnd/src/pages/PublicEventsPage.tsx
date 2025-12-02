@@ -92,7 +92,8 @@ export default function PublicEventsPage({ onBack, onViewEvent }: PublicEventsPa
         </div>
       ) : filteredEvents.length === 0 ? (
         <EnhancedEmptyState
-          variant={searchTerm ? 'noResults' : 'noEvents'}
+          variant="illustrated"
+          illustration={searchTerm ? 'noResults' : 'noEvents'}
           title={searchTerm ? 'Nenhum evento encontrado' : 'Nenhum evento público disponível'}
           description={searchTerm ? 'Tente buscar com outros termos ou volte mais tarde' : 'Aguarde novos eventos serem publicados na plataforma'}
           size="lg"

@@ -17,8 +17,7 @@ export default function EventFormModal({ onClose, onSuccess, initialDate }: Even
     location: '',
     visibility: 'PUBLIC',
     capacity: undefined,
-    allowWaitlist: false,
-    requireApproval: false,
+    waitlistEnabled: false,
   });
   const [guestEmails, setGuestEmails] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -196,21 +195,11 @@ export default function EventFormModal({ onClose, onSuccess, initialDate }: Even
             <label className="flex items-center gap-3">
               <input
                 type="checkbox"
-                checked={formData.allowWaitlist}
-                onChange={(e) => setFormData({ ...formData, allowWaitlist: e.target.checked })}
+                checked={formData.waitlistEnabled}
+                onChange={(e) => setFormData({ ...formData, waitlistEnabled: e.target.checked })}
                 className="w-5 h-5 text-primary-600 border-neutral-300 rounded focus:ring-2 focus:ring-primary-500"
               />
               <span className="text-sm text-neutral-700">Permitir lista de espera</span>
-            </label>
-
-            <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={formData.requireApproval}
-                onChange={(e) => setFormData({ ...formData, requireApproval: e.target.checked })}
-                className="w-5 h-5 text-primary-600 border-neutral-300 rounded focus:ring-2 focus:ring-primary-500"
-              />
-              <span className="text-sm text-neutral-700">Requer aprovação para participar</span>
             </label>
           </div>
 

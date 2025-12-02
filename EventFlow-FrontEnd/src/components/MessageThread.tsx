@@ -80,7 +80,9 @@ export function MessageThread({
     try {
       const token = api.getToken();
       if (!token) return '';
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const parts = token.split('.');
+      if (parts.length < 2 || !parts[1]) return '';
+      const payload = JSON.parse(atob(parts[1]));
       return payload.userId || payload.sub || '';
     } catch {
       return '';
