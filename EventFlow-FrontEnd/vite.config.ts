@@ -11,10 +11,8 @@ export default defineConfig({
   },
   server: {
     port: 3001,
-    proxy: {
-      '/auth': 'http://localhost:8080',
-      '/events': 'http://localhost:8080',
-    },
+    // Sem proxy - o serviço de API já usa URL direta para o backend
+    // Isso evita conflitos com rotas do React Router como /events/:id
   },
   test: {
     globals: true,

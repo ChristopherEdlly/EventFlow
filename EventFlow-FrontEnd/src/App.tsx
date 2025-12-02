@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { api } from './services/api';
 import { ToastProvider } from './context/ToastContext';
 import Layout from './components/Layout';
@@ -45,12 +45,23 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Wrapper para EventDetailsPage que usa useParams
+function EventDetailsWrapper({ onBack }: { onBack: () => void }) {
+  const { id } = useParams<{ id: string }>();
+  return <EventDetailsPage eventId={id || ''} onBack={onBack} />;
+}
+
+// Wrapper para GuestsPage que usa useParams
+function GuestsWrapper({ onBack }: { onBack: () => void }) {
+  const { id } = useParams<{ id: string }>();
+  return <GuestsPage eventId={id || ''} onBack={onBack} />;
+}
+
 // Componente interno que usa hooks do router
 function AppRoutes() {
   const navigate = useNavigate();
   const [checkingAuth, setCheckingAuth] = useState(api.isAuthenticated());
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   useEffect(() => {
     // Se há token salvo, tenta validar com o backend
@@ -96,14 +107,14 @@ function AppRoutes() {
   };
 
   const handleViewEvent = (eventId: string) => {
-    setSelectedEventId(eventId);
     navigate(`/events/${eventId}`);
   };
 
   const handleNavigate = (page: string) => {
     const routeMap: Record<string, string> = {
+      'home': '/',
       'dashboard': '/calendario',
-      'myEvents': '/',
+      'myEvents': '/my-events',
       'newEvent': '/new-event',
       'publicEvents': '/public-events',
       'myInvites': '/my-invites',
@@ -154,12 +165,12 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout
-              currentPage="myEvents"
+              currentPage="home"
               onNavigate={handleNavigate}
               onLogout={handleLogout}
               userName={userProfile?.name}
             >
-              <MyEventsPage onViewEvent={handleViewEvent} />
+              <HomePage onViewEvent={handleViewEvent} onNavigate={handleNavigate} />
             </Layout>
           </ProtectedRoute>
         }
@@ -175,14 +186,7 @@ function AppRoutes() {
               onLogout={handleLogout}
               userName={userProfile?.name}
             >
-              <DashboardPage
-                onLogout={handleLogout}
-                onNavigateToPublicEvents={() => navigate('/public-events')}
-                onNavigateToMyInvites={() => navigate('/my-invites')}
-                onNavigateToProfile={() => navigate('/profile')}
-                onNavigateToHistory={() => navigate('/history')}
-                onViewEvent={handleViewEvent}
-              />
+              <DashboardPage onViewEvent={handleViewEvent} />
             </Layout>
           </ProtectedRoute>
         }
@@ -243,6 +247,22 @@ function AppRoutes() {
       />
 
       <Route
+        path="/my-events"
+        element={
+          <ProtectedRoute>
+            <Layout
+              currentPage="myEvents"
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+              userName={userProfile?.name}
+            >
+              <MyEventsPage onViewEvent={handleViewEvent} />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/events/:id"
         element={
           <ProtectedRoute>
@@ -252,10 +272,7 @@ function AppRoutes() {
               onLogout={handleLogout}
               userName={userProfile?.name}
             >
-              <EventDetailsPage
-                eventId={selectedEventId || window.location.pathname.split('/').pop() || ''}
-                onBack={() => navigate(-1)}
-              />
+              <EventDetailsWrapper onBack={() => navigate(-1)} />
             </Layout>
           </ProtectedRoute>
         }
@@ -271,10 +288,7 @@ function AppRoutes() {
               onLogout={handleLogout}
               userName={userProfile?.name}
             >
-              <GuestsPage
-                eventId={selectedEventId || ''}
-                onBack={() => navigate(-1)}
-              />
+              <GuestsWrapper onBack={() => navigate(-1)} />
             </Layout>
           </ProtectedRoute>
         }

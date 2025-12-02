@@ -141,6 +141,10 @@ class EventsService {
     return api.get<Event[]>('/events/my-invites');
   }
 
+  async getMyParticipations(): Promise<Event[]> {
+    return api.get<Event[]>('/events/my-participations');
+  }
+
   async getEvent(id: string): Promise<Event> {
     return api.get<Event>(`/events/${id}`);
   }

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { eventsService } from '../services/events';
 import type { ApiError } from '../services/api';
-import PageHeader from '../components/PageHeader';
+import GradientHeader from '../components/GradientHeader';
 
 interface NewEventPageProps {
   onBack: () => void;
@@ -77,9 +77,9 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <PageHeader
+      <GradientHeader
         title="Cadastrar Novo Evento"
         subtitle="Preencha os detalhes abaixo para criar um novo evento"
         icon={
@@ -88,6 +88,7 @@ export default function NewEventPage({ onBack }: NewEventPageProps) {
           </svg>
         }
         onBack={onBack}
+        gradient="success"
       />
 
       {/* Form */}

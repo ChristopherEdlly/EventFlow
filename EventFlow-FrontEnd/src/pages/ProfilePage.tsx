@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { api } from '../services/api';
 import type { ApiError } from '../services/api';
 import Toast from '../components/Toast';
-import PageHeader from '../components/PageHeader';
+import GradientHeader from '../components/GradientHeader';
+import { HeaderSkeleton } from '../components/Skeleton';
 
 interface ProfilePageProps {
   onBack: () => void;
@@ -167,14 +169,31 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-neutral-50 py-8">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-lg shadow-sm p-8">
-            <div className="animate-pulse space-y-4">
-              <div className="h-6 bg-neutral-200 rounded w-1/3"></div>
-              <div className="h-4 bg-neutral-200 rounded w-2/3"></div>
-              <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
+      <div className="space-y-6">
+        <HeaderSkeleton />
+        {/* Profile Card Skeleton */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gray-200 rounded-full" />
+              <div className="space-y-2">
+                <div className="h-5 bg-gray-200 rounded w-32" />
+                <div className="h-4 bg-gray-200 rounded w-48" />
+              </div>
             </div>
+            <div className="h-px bg-gray-200 my-4" />
+            <div className="space-y-3">
+              <div className="h-4 bg-gray-200 rounded w-full" />
+              <div className="h-4 bg-gray-200 rounded w-3/4" />
+            </div>
+          </div>
+        </div>
+        {/* Security Card Skeleton */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-5 bg-gray-200 rounded w-24" />
+            <div className="h-4 bg-gray-200 rounded w-full" />
+            <div className="h-10 bg-gray-200 rounded w-40" />
           </div>
         </div>
       </div>
@@ -202,8 +221,8 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
   if (!profile) return null;
 
   return (
-    <div>
-      <PageHeader
+    <div className="space-y-6">
+      <GradientHeader
         title="Perfil"
         subtitle="Gerencie suas informações pessoais"
         icon={
@@ -216,7 +235,12 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
       <div className="max-w-2xl mx-auto px-4">
 
         {/* Profile Info Card */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="bg-white rounded-lg shadow-sm p-6 mb-6"
+        >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-neutral-900">Informações Pessoais</h2>
             {!isEditingProfile && (
@@ -292,10 +316,15 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
               </div>
             </form>
           )}
-        </div>
+        </motion.div>
 
         {/* Change Password Card */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="bg-white rounded-lg shadow-sm p-6"
+        >
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-semibold text-neutral-900">Segurança</h2>
@@ -375,10 +404,15 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
               </div>
             </form>
           )}
-        </div>
+        </motion.div>
 
         {/* Danger Zone - Delete Account */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mt-6 border-2 border-error-200">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+          className="bg-white rounded-lg shadow-sm p-6 mt-6 border-2 border-error-200"
+        >
           <div className="mb-4">
             <h2 className="text-xl font-semibold text-error-700 flex items-center gap-2">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -411,7 +445,7 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
             </svg>
             Deletar Minha Conta
           </button>
-        </div>
+        </motion.div>
       </div>
 
       {/* Toast Notification */}

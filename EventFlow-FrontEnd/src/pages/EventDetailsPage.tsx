@@ -6,6 +6,14 @@ import { MessageThread } from '../components/MessageThread';
 import { ConversationList } from '../components/ConversationList';
 import { ReportEventModal } from '../components/ReportEventModal';
 
+interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  eventId: string;
+}
+
 interface EventDetailsPageProps {
   eventId: string;
   onBack: () => void;
@@ -30,6 +38,14 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
   const [showConversationList, setShowConversationList] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [showAddGuestModal, setShowAddGuestModal] = useState(false);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [newGuestEmail, setNewGuestEmail] = useState('');
+  const [isAddingGuest, setIsAddingGuest] = useState(false);
+  const [newAnnouncement, setNewAnnouncement] = useState({ title: '', content: '' });
+  const [isCreatingAnnouncement, setIsCreatingAnnouncement] = useState(false);
+  const [guestToRemove, setGuestToRemove] = useState<Guest | null>(null);
+  const [isRemovingGuest, setIsRemovingGuest] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -53,9 +69,7 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
         // Load guests and announcements in parallel
         const [guestsData, announcementsData] = await Promise.all([
           eventsService.getEventGuests(eventId),
-          fetch(`/events/${eventId}/announcements`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-          }).then(r => r.ok ? r.json() : []).catch(() => [])
+          api.get<Announcement[]>(`/events/${eventId}/announcements`).catch(() => [] as Announcement[])
         ]);
 
         setGuests(guestsData);
@@ -116,52 +130,30 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
           }}></div>
         </div>
 
-        <div className="relative px-8 py-6">
-          {/* Botões de navegação */}
-          <div className="mb-4 flex items-center justify-between">
-            <button
-              onClick={onBack}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white rounded-xl transition-all duration-200 group"
-            >
-              <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              <span className="font-medium">Voltar</span>
-            </button>
-
-            {/* Botão de denúncia (apenas para não-proprietários) */}
-            {!isOwner && (
+        <div className="relative px-6 py-4">
+          {/* Header: Voltar + Título + Badges */}
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
               <button
-                onClick={() => setShowReportModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 backdrop-blur-sm text-white rounded-xl transition-all duration-200 border border-red-400/50"
-                title="Denunciar evento"
+                onClick={onBack}
+                className="flex-shrink-0 inline-flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white rounded-xl transition-all duration-200 group"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                <span className="font-medium text-sm">Denunciar</span>
               </button>
-            )}
-          </div>
-
-          {/* Título e Status */}
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
-            <div className="flex-1">
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 leading-tight break-words">{event.title}</h1>
-              {event.description && (
-                <p className="text-lg text-white/90 leading-relaxed break-words max-w-3xl">{event.description}</p>
-              )}
+              <h1 className="text-2xl md:text-3xl font-bold text-white truncate">{event.title}</h1>
             </div>
 
-            {/* Badges de Status */}
-            <div className="flex flex-wrap gap-2">
+            {/* Badges de Status + Botão Denúncia */}
+            <div className="flex items-center gap-2 flex-shrink-0">
               <span className={`px-4 py-2 rounded-xl text-sm font-semibold shadow-md backdrop-blur-sm ${event.visibility === 'PUBLIC'
                   ? 'bg-white/20 text-white'
                   : 'bg-amber-500/90 text-white'
                 }`}>
                 {event.visibility === 'PUBLIC' ? '🌐 Público' : '🔒 Privado'}
               </span>
-              <span className={`px-4 py-2 rounded-xl text-sm font-semibold shadow-md backdrop-blur-sm ${event.availability === 'PUBLISHED' ? 'bg-emerald-500/90 text-white' :
+              <span className={`px-3 py-1.5 rounded-xl text-xs font-semibold shadow-md backdrop-blur-sm ${event.availability === 'PUBLISHED' ? 'bg-emerald-500/90 text-white' :
                   event.availability === 'CANCELLED' ? 'bg-red-500/90 text-white' :
                     event.availability === 'COMPLETED' ? 'bg-gray-500/90 text-white' :
                       'bg-gray-400/90 text-white'
@@ -171,8 +163,24 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
                     event.availability === 'COMPLETED' ? '✓ Concluído' :
                       'Indefinido'}
               </span>
+              {!isOwner && (
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="p-2 bg-red-500/20 hover:bg-red-500/30 backdrop-blur-sm text-white rounded-xl transition-all duration-200 border border-red-400/50"
+                  title="Denunciar evento"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
+
+          {/* Descrição */}
+          {event.description && (
+            <p className="text-white/90 text-sm mb-4 line-clamp-2">{event.description}</p>
+          )}
 
           {/* Info Cards - Data, Local, Participantes */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
@@ -239,68 +247,226 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
       </div>
 
 
-      {/* Stats Cards e ações: só para o dono */}
+      {/* ===== VISÃO DO ORGANIZADOR ===== */}
       {isOwner && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <div className="text-sm font-medium text-gray-600 mb-1">Capacidade</div>
-            <div className="text-3xl font-bold text-gray-900">{stats.total}</div>
-            <div className="text-xs text-gray-500 mt-1">de {event.capacity || 200}</div>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <div className="text-sm font-medium text-gray-600 mb-1">Taxa de Confirmação</div>
-            <div className="text-3xl font-bold text-gray-900">{stats.confirmationRate}%</div>
-            <div className="text-xs text-gray-500 mt-1">{stats.confirmed} confirmados</div>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <div className="text-sm font-medium text-gray-600 mb-1">Ações Rápidas</div>
-            <div className="space-y-2 mt-2">
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setIsEditModalOpen(true)}
-                    className="flex-1 px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white text-xs font-medium rounded-lg transition-colors"
-                  >
-                    Editar Evento
-                  </button>
-                  <button
-                    onClick={() => alert('Funcionalidade de exportação em desenvolvimento. Em breve você poderá exportar a lista de convidados em CSV ou PDF.')}
-                    className="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Exportar Lista
-                  </button>
+        <div className="space-y-6">
+          {/* Barra de Ações do Organizador */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              {/* Estatísticas Inline */}
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">
+                    <span className="font-semibold text-gray-900">{stats.confirmed}</span> confirmados
+                  </span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">
+                    <span className="font-semibold text-gray-900">{stats.pending}</span> pendentes
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">
+                    <span className="font-semibold text-gray-900">{stats.declined}</span> recusados
+                  </span>
+                </div>
+                {event.capacity && (
+                  <div className="flex items-center gap-2 pl-4 border-l border-gray-200">
+                    <span className="text-sm text-gray-600">
+                      Capacidade: <span className="font-semibold text-gray-900">{stats.confirmed}/{event.capacity}</span>
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Botões de Ação */}
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowConversationList(true)}
-                  className="w-full px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-sm font-medium transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
-                  Ver Mensagens
+                  Mensagens
+                </button>
+                <button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-xl text-sm font-medium transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Editar
+                </button>
+                {event.availability !== 'CANCELLED' && (
+                  <button
+                    onClick={async () => {
+                      if (confirm('Tem certeza que deseja cancelar este evento? Esta ação não pode ser desfeita.')) {
+                        try {
+                          await eventsService.updateEvent(eventId, { availability: 'CANCELLED' });
+                          await loadData();
+                        } catch (err) {
+                          alert('Erro ao cancelar evento');
+                        }
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl text-sm font-medium transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Cancelar Evento
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Grid Principal: Lista de Convidados + Sidebar de Anúncios */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Coluna Principal: Lista de Convidados */}
+            <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+              {/* Header com Filtros */}
+              <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Convidados
+                    <span className="ml-2 text-sm font-normal text-gray-500">({stats.total})</span>
+                  </h2>
+                  {/* Botão adicionar + Mini filtros */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowAddGuestModal(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-xs font-medium rounded-lg transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Adicionar
+                    </button>
+                    <div className="flex items-center gap-1 border-l border-gray-200 pl-2">
+                      <span className="px-2 py-1 text-xs font-medium rounded bg-emerald-100 text-emerald-700">✓ {stats.confirmed}</span>
+                      <span className="px-2 py-1 text-xs font-medium rounded bg-amber-100 text-amber-700">⏳ {stats.pending}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lista de Convidados */}
+              <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
+                {guests.length === 0 ? (
+                  <div className="p-12 text-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500 mb-2">Nenhum convidado ainda</p>
+                    <p className="text-sm text-gray-400">Convide pessoas para o seu evento</p>
+                  </div>
+                ) : (
+                  guests.map((guest) => (
+                    <div key={guest.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-sm ${
+                          guest.status === 'YES' ? 'bg-emerald-100 text-emerald-700' :
+                          guest.status === 'NO' ? 'bg-red-100 text-red-700' :
+                          guest.status === 'MAYBE' ? 'bg-amber-100 text-amber-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {guest.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{guest.name}</p>
+                          <p className="text-sm text-gray-500">{guest.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          guest.status === 'YES' ? 'bg-emerald-100 text-emerald-700' :
+                          guest.status === 'NO' ? 'bg-red-100 text-red-700' :
+                          guest.status === 'MAYBE' ? 'bg-amber-100 text-amber-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {guest.status === 'YES' ? '✓ Confirmado' :
+                           guest.status === 'NO' ? '✕ Recusado' :
+                           guest.status === 'MAYBE' ? '? Talvez' :
+                           '⏳ Pendente'}
+                        </span>
+                        {/* Botão remover - apenas eventos privados */}
+                        {event.visibility === 'PRIVATE' && (
+                          <button
+                            onClick={() => setGuestToRemove(guest)}
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Remover convidado"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Sidebar: Anúncios */}
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+              <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Anúncios</h2>
+                <button 
+                  onClick={() => setShowAnnouncementModal(true)}
+                  className="p-2 hover:bg-primary-100 bg-primary-50 rounded-lg transition-colors" 
+                  title="Criar anúncio"
+                >
+                  <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
                 </button>
               </div>
 
-              {/* Status Change */}
-              <div>
-                <label className="text-xs text-gray-600 block mb-1">Mudar Status</label>
-                <select
-                  value={event.availability}
-                  onChange={async (e) => {
-                    const newAvailability = e.target.value as 'CANCELLED';
-                    if (newAvailability === 'CANCELLED') {
-                      try {
-                        await eventsService.updateEvent(eventId, { availability: newAvailability });
-                        await loadData();
-                      } catch (err) {
-                        alert('Erro ao cancelar evento');
-                      }
-                    }
-                  }}
-                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                >
-                  <option value="CANCELLED">✕ Cancelar Evento</option>
-                </select>
+              <div className="p-4 max-h-[500px] overflow-y-auto">
+                {announcements.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-gray-500 mb-3">Nenhum anúncio</p>
+                    <button 
+                      onClick={() => setShowAnnouncementModal(true)}
+                      className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      Criar Primeiro Anúncio
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {announcements.map((announcement) => (
+                      <div key={announcement.id} className="p-3 bg-gray-50 rounded-xl">
+                        {announcement.title && (
+                          <p className="font-medium text-gray-900 mb-1">{announcement.title}</p>
+                        )}
+                        <p className="text-sm text-gray-700">{announcement.content || announcement.message}</p>
+                        <p className="text-xs text-gray-400 mt-2">
+                          {new Date(announcement.createdAt).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -429,163 +595,6 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
         </div>
       )}
 
-      {/* Tabs: só para o dono */}
-      {isOwner && (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          {/* Tab Headers */}
-          <div className="flex border-b border-gray-200">
-            <button
-              onClick={() => setCurrentTab('guests')}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${currentTab === 'guests'
-                  ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-            >
-              Convidados ({stats.total})
-            </button>
-            <button
-              onClick={() => setCurrentTab('announcements')}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${currentTab === 'announcements'
-                  ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-            >
-              Anúncios
-            </button>
-          </div>
-
-          {/* Tab Content */}
-          <div className="p-6">
-
-            {/* Guests Tab */}
-            {currentTab === 'guests' && (
-              <div>
-                {/* Guest Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-                    <div className="text-xs text-gray-600">Total</div>
-                  </div>
-                  <div className="bg-emerald-50 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-emerald-700">{stats.confirmed}</div>
-                    <div className="text-xs text-emerald-600">Confirmados</div>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-gray-700">{stats.pending}</div>
-                    <div className="text-xs text-gray-600">Pendentes</div>
-                  </div>
-                  <div className="bg-red-50 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-red-700">{stats.declined}</div>
-                    <div className="text-xs text-red-600">Recusados</div>
-                  </div>
-                </div>
-
-                {/* Response Chart */}
-                <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                  <h3 className="text-sm font-medium text-gray-700 mb-4">Resumo de Respostas</h3>
-                  <div className="flex items-center justify-center">
-                    <div className="relative w-48 h-48">
-                      {/* Simple circular progress */}
-                      <svg className="w-full h-full -rotate-90">
-                        <circle
-                          cx="96"
-                          cy="96"
-                          r="80"
-                          fill="none"
-                          stroke="#e5e7eb"
-                          strokeWidth="16"
-                        />
-                        <circle
-                          cx="96"
-                          cy="96"
-                          r="80"
-                          fill="none"
-                          stroke="currentColor"
-                          className="text-primary-500"
-                          strokeWidth="16"
-                          strokeDasharray={`${stats.confirmationRate * 5.02} 502`}
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <div className="text-4xl font-bold text-gray-900">{stats.confirmed}</div>
-                        <div className="text-sm text-gray-600">Confirmados</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Guest List - barra de rolagem personalizada, z-index fix para Dropdown */}
-                <div className="space-y-2 max-h-[40vh] overflow-y-auto scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-gray-100 pr-2">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">Lista de Convidados</h3>
-                  {guests.length === 0 ? (
-                    <p className="text-center text-gray-500 py-8">Nenhum convidado ainda</p>
-                  ) : (
-                    guests.map((guest, idx) => (
-                      <div key={guest.id} className="flex items-center justify-between p-4 bg-white/80 rounded-lg hover:bg-primary-50 transition-colors relative" style={{ zIndex: guests.length - idx }}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                            <span className="text-sm font-medium text-primary-700">
-                              {guest.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{guest.name}</p>
-                            <p className="text-sm text-gray-600">{guest.email}</p>
-                          </div>
-                        </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${guest.status === 'YES' ? 'bg-emerald-100 text-emerald-700' :
-                            guest.status === 'NO' ? 'bg-red-100 text-red-700' :
-                              guest.status === 'MAYBE' ? 'bg-amber-100 text-amber-700' :
-                                'bg-gray-100 text-gray-700'
-                          }`}>
-                          {guest.status === 'YES' ? 'Confirmado' :
-                            guest.status === 'NO' ? 'Recusado' :
-                              guest.status === 'MAYBE' ? 'Talvez' :
-                                'Pendente'}
-                        </span>
-                        {/* Espaço extra para Dropdown no último item */}
-                        {idx === guests.length - 1 && <div className="h-8"></div>}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Announcements Tab */}
-            {currentTab === 'announcements' && (
-              <div>
-                {announcements.length === 0 ? (
-                  <div className="text-center py-12">
-                    <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                    </svg>
-                    <p className="text-gray-500 mb-4">Nenhum anúncio ainda</p>
-                    {isOwner && (
-                      <button className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors">
-                        Criar Anúncio
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {announcements.map((announcement) => (
-                      <div key={announcement.id} className="p-4 bg-gray-50 rounded-lg">
-                        <p className="text-gray-900">{announcement.message}</p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          {new Date(announcement.createdAt).toLocaleDateString('pt-BR')}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Modal de Edição de Evento */}
       {isEditModalOpen && event && (
         <EditEventModal
@@ -625,6 +634,194 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
           onClose={() => setShowReportModal(false)}
           onSuccess={() => loadData()}
         />
+      )}
+
+      {/* Modal de Adicionar Convidado */}
+      {showAddGuestModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-gray-900">Adicionar Convidado</h3>
+                <button 
+                  onClick={() => { setShowAddGuestModal(false); setNewGuestEmail(''); }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                E-mail do convidado
+              </label>
+              <input
+                type="email"
+                value={newGuestEmail}
+                onChange={(e) => setNewGuestEmail(e.target.value)}
+                placeholder="exemplo@email.com"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              />
+              <p className="mt-2 text-xs text-gray-500">
+                O convidado receberá um convite por e-mail para participar do evento.
+              </p>
+            </div>
+            <div className="p-6 bg-gray-50 flex justify-end gap-3">
+              <button
+                onClick={() => { setShowAddGuestModal(false); setNewGuestEmail(''); }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  if (!newGuestEmail.trim()) return;
+                  setIsAddingGuest(true);
+                  try {
+                    await eventsService.addGuestsByEmail(eventId, [newGuestEmail.trim()]);
+                    await loadData();
+                    setShowAddGuestModal(false);
+                    setNewGuestEmail('');
+                  } catch (err: any) {
+                    alert(err?.message || 'Erro ao adicionar convidado');
+                  } finally {
+                    setIsAddingGuest(false);
+                  }
+                }}
+                disabled={isAddingGuest || !newGuestEmail.trim()}
+                className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors"
+              >
+                {isAddingGuest ? 'Adicionando...' : 'Adicionar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Criar Anúncio */}
+      {showAnnouncementModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-gray-900">Criar Anúncio</h3>
+                <button 
+                  onClick={() => { setShowAnnouncementModal(false); setNewAnnouncement({ title: '', content: '' }); }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Título do anúncio
+                </label>
+                <input
+                  type="text"
+                  value={newAnnouncement.title}
+                  onChange={(e) => setNewAnnouncement(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Ex: Mudança de local"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Conteúdo
+                </label>
+                <textarea
+                  value={newAnnouncement.content}
+                  onChange={(e) => setNewAnnouncement(prev => ({ ...prev, content: e.target.value }))}
+                  placeholder="Escreva o conteúdo do anúncio..."
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                Os convidados serão notificados por e-mail sobre este anúncio.
+              </p>
+            </div>
+            <div className="p-6 bg-gray-50 flex justify-end gap-3">
+              <button
+                onClick={() => { setShowAnnouncementModal(false); setNewAnnouncement({ title: '', content: '' }); }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  if (!newAnnouncement.title.trim() || !newAnnouncement.content.trim()) return;
+                  setIsCreatingAnnouncement(true);
+                  try {
+                    await api.post(`/events/${eventId}/announcements`, newAnnouncement);
+                    await loadData();
+                    setShowAnnouncementModal(false);
+                    setNewAnnouncement({ title: '', content: '' });
+                  } catch (err: any) {
+                    alert(err?.message || 'Erro ao criar anúncio');
+                  } finally {
+                    setIsCreatingAnnouncement(false);
+                  }
+                }}
+                disabled={isCreatingAnnouncement || !newAnnouncement.title.trim() || !newAnnouncement.content.trim()}
+                className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors"
+              >
+                {isCreatingAnnouncement ? 'Criando...' : 'Criar Anúncio'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Remoção de Convidado */}
+      {guestToRemove && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">Remover Convidado</h3>
+              <p className="text-gray-600 text-center mb-6">
+                Tem certeza que deseja remover <strong>{guestToRemove.name}</strong> ({guestToRemove.email}) do evento?
+              </p>
+            </div>
+            <div className="p-6 bg-gray-50 flex justify-end gap-3">
+              <button
+                onClick={() => setGuestToRemove(null)}
+                disabled={isRemovingGuest}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  setIsRemovingGuest(true);
+                  try {
+                    await eventsService.removeGuest(eventId, guestToRemove.id);
+                    await loadData();
+                    setGuestToRemove(null);
+                  } catch (err: any) {
+                    alert(err?.message || 'Erro ao remover convidado');
+                  } finally {
+                    setIsRemovingGuest(false);
+                  }
+                }}
+                disabled={isRemovingGuest}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors"
+              >
+                {isRemovingGuest ? 'Removendo...' : 'Remover'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

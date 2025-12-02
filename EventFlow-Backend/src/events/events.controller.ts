@@ -166,10 +166,16 @@ export class EventsController {
 
     if (!user) throw new UnauthorizedException('Usuário não encontrado');
 
-    // Find all events where user is a guest
+    // Find all events where user is a guest AND is NOT the owner
+    // Also filter: only PRIVATE events count as real "invites"
+    // PUBLIC events where you're a guest = you subscribed yourself
     const guests = await this.prisma.guest.findMany({
       where: {
         email: user.email,
+        event: {
+          ownerId: { not: uid }, // Exclude events owned by the user
+          visibility: 'PRIVATE', // Only private events are real invites
+        },
       },
       include: {
         event: {
@@ -188,6 +194,51 @@ export class EventsController {
       ...guest.event,
       myGuestStatus: guest.status,
       myGuestId: guest.id,
+    }));
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('my-participations')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getMyParticipations(@Req() req: any) {
+    const uid = req.user?.userId;
+    if (!uid) throw new UnauthorizedException('Não autenticado');
+
+    // Get user email to find their participations
+    const user = await this.prisma.user.findUnique({
+      where: { id: uid },
+      select: { email: true },
+    });
+
+    if (!user) throw new UnauthorizedException('Usuário não encontrado');
+
+    // Find ALL events where user is a guest (both public and private)
+    // This is for calendar view - shows everything user is participating in
+    const guests = await this.prisma.guest.findMany({
+      where: {
+        email: user.email,
+        event: {
+          ownerId: { not: uid }, // Exclude events owned by the user
+        },
+      },
+      include: {
+        event: {
+          include: {
+            _count: {
+              select: { guests: true },
+            },
+          },
+        },
+      },
+      orderBy: { event: { date: 'asc' } },
+    });
+
+    // Return events with guest status and participation type
+    return guests.map((guest: any) => ({
+      ...guest.event,
+      myGuestStatus: guest.status,
+      myGuestId: guest.id,
+      isInvite: guest.event.visibility === 'PRIVATE',
     }));
   }
 
@@ -963,8 +1014,26 @@ export class EventsController {
 
     if (!event) throw new NotFoundException('Evento não encontrado');
 
-    // User must be either the owner or the other user
-    if (uid !== event.ownerId && uid !== otherUserId) {
+    // Get user email to check if they're a guest
+    const user = await this.prisma.user.findUnique({
+      where: { id: uid },
+      select: { email: true },
+    });
+
+    if (!user) throw new UnauthorizedException('Usuário não encontrado');
+
+    // Check if user is a guest of this event
+    const isGuest = await this.prisma.guest.findFirst({
+      where: { eventId: id, email: user.email },
+    });
+
+    // User must be:
+    // 1. The event owner (can see conversations with any participant)
+    // 2. A guest viewing their conversation with the owner (otherUserId must be the owner)
+    const isOwner = uid === event.ownerId;
+    const isGuestViewingOwnerConversation = isGuest && otherUserId === event.ownerId;
+
+    if (!isOwner && !isGuestViewingOwnerConversation) {
       throw new ForbiddenException('Você não tem permissão para ver esta conversa');
     }
 

@@ -1,7 +1,8 @@
 export default () => ({
   port: parseInt(process.env.PORT || '8080', 10),
   database: {
-    url: process.env.SQLITE_DATABASE_URL || 'file:./dev.db',
+    url: process.env.DATABASE_URL,
+    directUrl: process.env.DIRECT_URL,
   },
   jwt: {
     secret: process.env.JWT_SECRET || 'devsecret',

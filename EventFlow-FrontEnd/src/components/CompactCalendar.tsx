@@ -38,13 +38,14 @@ export default function CompactCalendar({ events, onEventClick, onDateClick }: C
     return map;
   }, [events, currentDate]);
 
-  // Próximos 3 eventos
+  // Próximos eventos (incluindo hoje)
   const upcomingEvents = useMemo(() => {
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
     return events
       .filter(e => new Date(e.date) >= now && e.availability === 'PUBLISHED')
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(0, 3);
+      .slice(0, 6);
   }, [events]);
 
   const goToPreviousMonth = () => {
@@ -97,12 +98,11 @@ export default function CompactCalendar({ events, onEventClick, onDateClick }: C
             onDateClick(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
           }
         }}
-        className={`aspect-square flex flex-col items-center justify-center rounded-xl transition-all duration-300 relative group overflow-visible focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
-          ${isTodayDate ? 'bg-gradient-to-br from-primary-500 to-secondary-500 text-white font-bold shadow-xl scale-110 ring-2 ring-primary-400 ring-offset-2' :
-            hasEvents ? 'bg-gradient-to-br from-primary-50 to-primary-100 text-primary-900 hover:from-primary-100 hover:to-primary-200 font-semibold shadow-md border border-primary-300 hover:shadow-lg hover:scale-105' :
-            'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 hover:scale-105 border border-transparent hover:border-neutral-200'}
+        className={`aspect-square flex flex-col items-center justify-center rounded-lg transition-all duration-200 relative group overflow-visible focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary-500
+          ${isTodayDate ? 'bg-gradient-to-br from-primary-500 to-secondary-500 text-white font-bold shadow-lg ring-2 ring-primary-400 ring-offset-1' :
+            hasEvents ? 'bg-gradient-to-br from-primary-50 to-primary-100 text-primary-900 hover:from-primary-100 hover:to-primary-200 font-semibold shadow-sm border border-primary-200 hover:shadow-md' :
+            'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 border border-transparent hover:border-neutral-200'}
           ${animating ? 'animate-pulse' : ''}`}
-        style={{ minHeight: 56 }}
         tabIndex={0}
         aria-label={hasEvents ? `Dia ${day} com ${dayEvents.length} evento(s)` : `Dia ${day} sem eventos`}
       >
@@ -146,14 +146,14 @@ export default function CompactCalendar({ events, onEventClick, onDateClick }: C
   }
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div className="flex flex-col lg:flex-row gap-6">
       {/* Calendário */}
-      <div className="xl:col-span-2 bg-gradient-to-br from-white to-neutral-50 rounded-2xl shadow-xl border border-neutral-200 overflow-hidden">
+      <div className="flex-1 max-w-[600px] bg-gradient-to-br from-white to-neutral-50 rounded-2xl shadow-xl border border-neutral-200 overflow-hidden">
         {/* Header com gradiente */}
-        <div className="bg-gradient-to-r from-primary-600 to-secondary-600 p-6">
+        <div className="bg-gradient-to-r from-primary-600 to-secondary-600 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-white mb-1">
+              <h3 className="text-xl font-bold text-white">
                 {monthNames[currentDate.getMonth()]}
               </h3>
               <p className="text-white/80 text-sm font-medium">{currentDate.getFullYear()}</p>
@@ -187,55 +187,60 @@ export default function CompactCalendar({ events, onEventClick, onDateClick }: C
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4">
           {/* Day names */}
-          <div className="grid grid-cols-7 gap-2 mb-3">
+          <div className="grid grid-cols-7 gap-1.5 mb-2">
             {dayNames.map((day, idx) => (
-              <div key={idx} className="text-center text-xs font-bold text-neutral-600 py-2 uppercase tracking-wide">
+              <div key={idx} className="text-center text-xs font-bold text-neutral-500 py-1 uppercase tracking-wide">
                 {day}
               </div>
             ))}
           </div>
 
           {/* Calendar grid */}
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1.5">
             {calendarDays}
           </div>
 
           {/* Legend */}
-          <div className="flex flex-wrap gap-4 mt-6 pt-5 border-t border-neutral-200">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-success-500 rounded-full shadow-sm"></div>
-              <span className="text-neutral-700 text-xs font-medium">Publicado</span>
+          <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-neutral-200">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 bg-success-500 rounded-full"></div>
+              <span className="text-neutral-600 text-xs">Publicado</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-error-500 rounded-full shadow-sm"></div>
-              <span className="text-neutral-700 text-xs font-medium">Cancelado</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 bg-error-500 rounded-full"></div>
+              <span className="text-neutral-600 text-xs">Cancelado</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gray-400 rounded-full shadow-sm"></div>
-              <span className="text-neutral-700 text-xs font-medium">Concluído</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 bg-gray-400 rounded-full"></div>
+              <span className="text-neutral-600 text-xs">Concluído</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full shadow-md"></div>
-              <span className="text-neutral-700 text-xs font-medium">Dia Atual</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full"></div>
+              <span className="text-neutral-600 text-xs">Dia Atual</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Próximos Eventos */}
-      <div className="bg-white rounded-2xl shadow-xl border border-neutral-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-primary-600 to-secondary-600 p-5">
+      {/* Próximos Eventos - ocupa toda largura restante */}
+      <div className="flex-1 bg-white rounded-xl shadow-lg border border-neutral-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-primary-600 to-secondary-600 p-4">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
             Próximos Eventos
+            {upcomingEvents.length > 0 && (
+              <span className="ml-auto bg-white/20 px-2.5 py-1 rounded-full text-sm">
+                {upcomingEvents.length}
+              </span>
+            )}
           </h3>
         </div>
 
-        <div className="p-5">
+        <div className="p-4">
           {upcomingEvents.length === 0 ? (
             <div className="text-center py-12">
               <div className="w-16 h-16 mx-auto mb-4 bg-neutral-100 rounded-full flex items-center justify-center">
@@ -243,50 +248,51 @@ export default function CompactCalendar({ events, onEventClick, onDateClick }: C
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <p className="text-sm text-neutral-500 font-medium">Nenhum evento próximo</p>
-              <p className="text-xs text-neutral-400 mt-1">Os próximos eventos aparecerão aqui</p>
+              <p className="text-neutral-600 font-medium">Nenhum evento próximo</p>
+              <p className="text-sm text-neutral-400 mt-1">Os próximos eventos aparecerão aqui</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {upcomingEvents.map((event, index) => (
+              {upcomingEvents.map((event) => (
                 <button
                   key={event.id}
                   onClick={() => onEventClick(event.id)}
-                  className="w-full bg-gradient-to-br from-neutral-50 to-white hover:from-primary-50 hover:to-secondary-50 rounded-xl p-4 border border-neutral-200 hover:border-primary-300 transition-all duration-300 text-left group shadow-sm hover:shadow-lg"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  className="w-full bg-neutral-50 hover:bg-primary-50 rounded-xl p-4 border border-neutral-200 hover:border-primary-300 transition-all text-left group"
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex flex-col items-center justify-center text-white shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
-                      <span className="text-xs font-bold tracking-wider">
+                  <div className="flex items-center gap-4">
+                    <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex flex-col items-center justify-center text-white shadow-md">
+                      <span className="text-[10px] font-semibold tracking-wide">
                         {new Date(event.date).toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase()}
                       </span>
-                      <span className="text-xl font-bold">
+                      <span className="text-lg font-bold -mt-0.5">
                         {new Date(event.date).getDate()}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-neutral-900 truncate group-hover:text-primary-700 transition-colors text-base">
+                      <h4 className="font-semibold text-neutral-900 truncate text-base group-hover:text-primary-700">
                         {event.title}
                       </h4>
-                      {event.time && (
-                        <div className="flex items-center gap-1.5 mt-2">
-                          <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <p className="text-sm text-neutral-600 font-medium">{event.time}</p>
-                        </div>
-                      )}
-                      {event.location && (
-                        <div className="flex items-center gap-1.5 mt-1.5">
-                          <svg className="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <p className="text-xs text-neutral-500 truncate">{event.location}</p>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-4 mt-1">
+                        {event.time && (
+                          <div className="flex items-center gap-1.5">
+                            <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p className="text-sm text-neutral-600">{event.time}</p>
+                          </div>
+                        )}
+                        {event.location && (
+                          <div className="flex items-center gap-1.5">
+                            <svg className="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <p className="text-sm text-neutral-500 truncate">{event.location}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <svg className="w-5 h-5 text-neutral-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-neutral-400 group-hover:text-primary-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>

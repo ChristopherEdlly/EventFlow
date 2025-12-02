@@ -1,13 +1,14 @@
-// Prisma schema para User e Event (inicial)
-// Salve este arquivo como schema.prisma na pasta backend/prisma
+// Prisma schema para User e Event
+// Conectado ao Supabase (PostgreSQL)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("SQLITE_DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {

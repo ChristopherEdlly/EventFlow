@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { eventsService, type Event } from '../services/events';
 import type { ApiError } from '../services/api';
-import EmptyState from '../components/EmptyState';
-import PageHeader from '../components/PageHeader';
+import GradientHeader from '../components/GradientHeader';
+import { HeaderSkeleton, EventGridSkeleton } from '../components/Skeleton';
+import EnhancedEmptyState from '../components/EnhancedEmptyState';
 
 interface PublicEventsPageProps {
   onBack: () => void;
@@ -40,8 +42,8 @@ export default function PublicEventsPage({ onBack, onViewEvent }: PublicEventsPa
   );
 
   return (
-    <div>
-      <PageHeader
+    <div className="space-y-6">
+      <GradientHeader
         title="Eventos Públicos"
         subtitle="Descubra eventos públicos acontecendo na sua região"
         icon={
@@ -49,7 +51,13 @@ export default function PublicEventsPage({ onBack, onViewEvent }: PublicEventsPa
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         }
-      >
+        stats={[
+          { value: events.length, label: 'Disponíveis' },
+        ]}
+      />
+
+      {/* Barra de Busca */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="relative">
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -67,7 +75,7 @@ export default function PublicEventsPage({ onBack, onViewEvent }: PublicEventsPa
             className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
-      </PageHeader>
+      </div>
 
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -76,27 +84,36 @@ export default function PublicEventsPage({ onBack, onViewEvent }: PublicEventsPa
       )}
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <svg className="animate-spin h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
+        <div className="space-y-6">
+          <HeaderSkeleton />
+          {/* Search skeleton */}
+          <div className="h-14 bg-gray-200 rounded-xl animate-pulse" />
+          <EventGridSkeleton count={6} />
         </div>
       ) : filteredEvents.length === 0 ? (
-        <EmptyState
+        <EnhancedEmptyState
+          variant={searchTerm ? 'noResults' : 'noEvents'}
           title={searchTerm ? 'Nenhum evento encontrado' : 'Nenhum evento público disponível'}
-          description={searchTerm ? 'Tente buscar com outros termos' : 'Aguarde novos eventos serem publicados'}
-          icon={
-            <svg className="w-10 h-10 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          }
+          description={searchTerm ? 'Tente buscar com outros termos ou volte mais tarde' : 'Aguarde novos eventos serem publicados na plataforma'}
+          size="lg"
+          action={searchTerm ? {
+            label: 'Limpar busca',
+            onClick: () => setSearchTerm('')
+          } : undefined}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event) => (
-            <div
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {filteredEvents.map((event, index) => (
+            <motion.div
               key={event.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
               className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 hover:border-primary-300 group cursor-pointer"
               onClick={() => onViewEvent(event.id)}
             >
@@ -169,9 +186,9 @@ export default function PublicEventsPage({ onBack, onViewEvent }: PublicEventsPa
                     Ver Detalhes
                   </button>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )
       }
     </div>

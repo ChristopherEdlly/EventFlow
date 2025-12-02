@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { eventsService, type Event } from '../services/events';
 import type { ApiError } from '../services/api';
 import ConfirmModal from '../components/ConfirmModal';
 import EditEventModal from '../components/EditEventModal';
-import PageHeader from '../components/PageHeader';
+import GradientHeader from '../components/GradientHeader';
+import { HeaderSkeleton, TableSkeleton } from '../components/Skeleton';
+import EnhancedEmptyState from '../components/EnhancedEmptyState';
 
 interface MyEventsPageProps {
   onViewEvent: (eventId: string) => void;
@@ -71,19 +74,24 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <svg className="animate-spin h-8 w-8 text-primary-500" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
+      <div className="space-y-6">
+        <HeaderSkeleton />
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="flex gap-4 animate-pulse">
+            <div className="flex-1 h-10 bg-gray-200 rounded-lg" />
+            <div className="w-40 h-10 bg-gray-200 rounded-lg" />
+            <div className="w-40 h-10 bg-gray-200 rounded-lg" />
+          </div>
+        </div>
+        <TableSkeleton rows={5} columns={6} />
       </div>
     );
   }
 
   return (
-    <div>
-      {/* Header with Integrated Controls */}
-      <PageHeader
+    <div className="space-y-6">
+      {/* Header */}
+      <GradientHeader
         title="Meus Eventos"
         subtitle="Gerencie todos os seus eventos"
         icon={
@@ -91,19 +99,25 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         }
+        stats={[
+          { value: events.length, label: 'Total' },
+          { value: events.filter(e => e.availability === 'PUBLISHED').length, label: 'Publicados' },
+        ]}
         actions={
           <button
             onClick={() => window.location.href = '/new-event'}
-            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl font-medium transition-colors flex items-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Criar Novo Evento
+            Criar Evento
           </button>
         }
-      >
-        {/* Integrated Controls */}
+      />
+
+      {/* Filtros e Controles */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
           {/* Search */}
           <div className="flex-1">
@@ -172,21 +186,36 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
             </button>
           </div>
         </div>
-      </PageHeader>
+      </div>
 
       {/* Events Table/Grid */}
       {filteredEvents.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        <EnhancedEmptyState
+          title={searchTerm ? 'Nenhum evento encontrado' : 'Você ainda não tem eventos'}
+          description={searchTerm 
+            ? 'Tente buscar com outros termos ou ajuste os filtros'
+            : 'Crie seu primeiro evento e comece a organizar suas reuniões, festas e encontros!'
+          }
+          icon={
+            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum evento encontrado</h3>
-          <p className="text-gray-500 mb-4">Ajuste os filtros ou crie um novo evento</p>
-        </div>
+          }
+          action={!searchTerm ? {
+            label: 'Criar Primeiro Evento',
+            onClick: () => window.location.href = '/new-event',
+          } : undefined}
+          secondaryAction={searchTerm ? {
+            label: 'Limpar Busca',
+            onClick: () => setSearchTerm(''),
+          } : undefined}
+        />
       ) : viewMode === 'list' ? (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-lg border border-gray-200 overflow-x-auto"
+        >
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -339,7 +368,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
               ))}
             </tbody>
           </table>
-        </div>
+        </motion.div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredEvents.map((event) => (
