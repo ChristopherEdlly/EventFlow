@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import type { ApiError } from '../services/api';
 import GeometricPatterns from '../components/GeometricPatterns';
 import InfoPanel from '../components/InfoPanel';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
 interface RegisterPageProps {
   onRegister: () => void;
@@ -370,6 +371,40 @@ export default function RegisterPage({
                         </motion.button>
                       </motion.div>
                     </motion.form>
+
+                    {/* Divider - OU */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.7 }}
+                      className="mt-4 relative"
+                    >
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-200"></div>
+                      </div>
+                      <div className="relative flex justify-center text-xs">
+                        <span className="px-3 bg-white text-gray-500 font-medium">
+                          ou continue com
+                        </span>
+                      </div>
+                    </motion.div>
+
+                    {/* Google Login Button */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.75 }}
+                      className="mt-4"
+                    >
+                      <GoogleLoginButton
+                        onSuccess={(response) => {
+                          // Salvar token e redirecionar
+                          localStorage.setItem('auth_token', response.token);
+                          onRegister();
+                        }}
+                        onError={(errorMsg) => setError(errorMsg)}
+                      />
+                    </motion.div>
 
                     {/* Divider */}
                     <motion.div

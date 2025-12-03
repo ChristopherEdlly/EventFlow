@@ -189,6 +189,25 @@ export class MailService {
   }
 
   /**
+   * Envia email genérico
+   */
+  async sendMail(options: { to: string; subject: string; html: string }): Promise<boolean> {
+    try {
+      await this.mailerService.sendMail({
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+      });
+
+      this.logger.log(`Email enviado para ${options.to}`);
+      return true;
+    } catch (error) {
+      this.logger.error(`Erro ao enviar email para ${options.to}:`, error);
+      return false;
+    }
+  }
+
+  /**
    * Teste de configuração de email
    */
   async testEmailConfiguration(): Promise<boolean> {

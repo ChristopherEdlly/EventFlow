@@ -15,8 +15,17 @@ model User {
   id               String    @id @default(uuid())
   name             String
   email            String    @unique
-  password         String
+  password         String?   // Opcional para login OAuth
   role             String    @default("USER") // USER, ADMIN
+
+  // OAuth providers
+  authProvider     String    @default("LOCAL") // LOCAL, GOOGLE
+  googleId         String?   @unique
+
+  // Email verification
+  emailVerified    Boolean   @default(false)
+  verificationCode String?
+  verificationExpires DateTime?
 
   // Ban system
   isBanned         Boolean   @default(false)
