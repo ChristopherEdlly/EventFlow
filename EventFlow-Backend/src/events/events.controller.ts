@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
 import { z } from 'zod';
@@ -70,6 +71,7 @@ export class EventsController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -434,6 +436,38 @@ export class EventsController {
       data: changes,
       include: { guests: true },
     });
+
+    // Notify guests about event updates if requested or if cancelled
+    const shouldNotify = notifyGuests || newAvailability === 'CANCELLED';
+    if (shouldNotify && existing.guests.length > 0) {
+      // Get all guest user IDs
+      const guestEmails = existing.guests.map((g: any) => g.email);
+      const guestUsers = await this.prisma.user.findMany({
+        where: { email: { in: guestEmails } },
+        select: { id: true },
+      });
+
+      if (guestUsers.length > 0) {
+        const notificationType = newAvailability === 'CANCELLED' ? 'EVENT_CANCELLED' : 'EVENT_UPDATE';
+        const notificationTitle = newAvailability === 'CANCELLED' 
+          ? 'Evento cancelado'
+          : 'Evento atualizado';
+        const notificationMessage = newAvailability === 'CANCELLED'
+          ? `O evento "${updated.title}" foi cancelado${cancelledReason ? `: ${cancelledReason}` : ''}`
+          : `O evento "${updated.title}" foi atualizado. Verifique os novos detalhes.`;
+
+        const userIds = guestUsers.map((user: { id: string }) => user.id);
+
+        await this.notificationsService.createMany(userIds, {
+          type: notificationType as 'EVENT_UPDATE' | 'EVENT_CANCELLED',
+          title: notificationTitle,
+          message: notificationMessage,
+          eventId: id,
+          actionUrl: `/events/${id}`,
+        });
+      }
+    }
+
     return updated;
   }
 
@@ -586,6 +620,21 @@ export class EventsController {
             eventId: fullEvent.id,
             guestId: guest.id,
           });
+          
+          // Create in-app notification for the invited user
+          const invitedUser = await this.prisma.user.findUnique({
+            where: { email: guest.email },
+            select: { id: true },
+          });
+          
+          if (invitedUser) {
+            await this.notificationsService.notifyEventInvite(
+              invitedUser.id,
+              fullEvent.id,
+              fullEvent.title,
+              fullEvent.owner.name,
+            );
+          }
         }
       }
     }
@@ -662,6 +711,23 @@ export class EventsController {
       where: { id: guestId },
       data: updateData,
     });
+
+    // Notify event owner when guest responds
+    if (status && isGuest) {
+      const statusText = status === 'YES' ? 'confirmou presença' : 
+                         status === 'NO' ? 'recusou o convite' : 
+                         status === 'MAYBE' ? 'respondeu talvez' : '';
+      
+      if (statusText) {
+        await this.notificationsService.notifyRsvpResponse(
+          guest.event.ownerId,
+          eventId,
+          guest.event.title,
+          guest.name || guest.email,
+          status,
+        );
+      }
+    }
 
     return updated;
   }

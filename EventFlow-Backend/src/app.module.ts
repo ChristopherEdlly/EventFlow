@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 import { ModerationModule } from './moderation/moderation.module';
 import { MailModule } from './mail/mail.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
 
@@ -24,6 +25,7 @@ import { validationSchema } from './config/validation';
     AuthModule,
     ModerationModule,
     MailModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

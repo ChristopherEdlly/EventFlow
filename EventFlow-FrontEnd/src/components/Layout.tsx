@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import NotificationBell from './NotificationBell';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -224,6 +225,20 @@ export default function Layout({ children, currentPage, onNavigate, onLogout, us
 
       {/* Main Content Area */}
       <div className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'ml-20' : 'ml-64'} bg-gradient-to-br from-primary-50 via-primary-100 to-secondary-50`}>
+        {/* Top Bar com Notificações */}
+        <div className="sticky top-0 z-30 bg-gradient-to-r from-primary-500/95 via-primary-600/95 to-secondary-600/95 backdrop-blur-sm border-b border-primary-400/30 px-6 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-white/80 text-sm hidden sm:inline">
+                Olá, <span className="font-semibold text-white">{userName || 'Usuário'}</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+            </div>
+          </div>
+        </div>
+        
         <main className="p-6 md:p-10">
           {children}
         </main>

@@ -30,6 +30,8 @@ model User {
   receivedMessages Message[] @relation("ReceivedMessages")
   reports          Report[]  @relation("ReportedBy")
   penalties        Penalty[]
+  notifications    Notification[]
+  pushSubscriptions PushSubscription[]
   createdAt        DateTime  @default(now())
 }
 
@@ -71,6 +73,7 @@ model Event {
   announcements  Announcement[]
   messages       Message[]
   reports        Report[]
+  notifications  Notification[]
   createdAt      DateTime      @default(now())
 }
 
@@ -138,4 +141,54 @@ model Penalty {
   isActive  Boolean     @default(true)
   createdBy String      // ID do admin que aplicou
   createdAt DateTime    @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type      String   // EVENT_INVITE, EVENT_REMINDER, EVENT_UPDATE, EVENT_CANCELLED, RSVP_RESPONSE, NEW_MESSAGE, ANNOUNCEMENT, SYSTEM
+  title     String
+  message   String
+  
+  // Referências opcionais
+  eventId   String?
+  event     Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  // Metadados
+  data      String?  // JSON com dados extras
+  actionUrl String?  // URL para redirecionar ao clicar
+  
+  // Status
+  read      Boolean  @default(false)
+  readAt    DateTime?
+  
+  // Push notification tracking
+  pushSent  Boolean  @default(false)
+  pushSentAt DateTime?
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId, read])
+  @@index([userId, createdAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // FCM Token
+  fcmToken  String   @unique
+  
+  // Device info
+  deviceType String?  // web, android, ios
+  deviceName String?
+  
+  isActive  Boolean  @default(true)
+  lastUsed  DateTime @default(now())
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
 }

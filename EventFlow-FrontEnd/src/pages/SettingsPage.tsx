@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { api, type ApiError } from '../services/api';
 import GradientHeader from '../components/GradientHeader';
+import NotificationSettings from '../components/NotificationSettings';
 
 interface SettingsPageProps {
   onBack: () => void;
@@ -126,6 +127,15 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
                 </label>
               </div>
             </div>
+          </motion.div>
+
+          {/* Push Notifications */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
+          >
+            <NotificationSettings />
           </motion.div>
 
           {/* Preferences */}
