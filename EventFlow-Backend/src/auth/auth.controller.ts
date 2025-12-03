@@ -63,15 +63,14 @@ export class AuthController {
     // Enviar código de verificação
     await this.emailVerificationService.sendVerificationCode(email, user.id);
     
-    const token = this.jwtService.sign({ userId: user.id });
-    res.cookie('jwt', token, { httpOnly: true, sameSite: 'lax' });
-    res.json({ 
+    // NÃO fazer login automático - exigir verificação de email primeiro
+    res.status(201).json({ 
       id: user.id, 
       name: user.name, 
       email: user.email, 
-      emailVerified: user.emailVerified,
-      token,
-      message: 'Conta criada! Verifique seu email para ativar a conta.',
+      emailVerified: false,
+      requiresVerification: true,
+      message: 'Conta criada! Verifique seu email para ativar a conta. Enviamos um código de 6 dígitos.',
     });
   }
 
@@ -89,6 +88,14 @@ export class AuthController {
     
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) throw new UnauthorizedException('Credenciais inválidas');
+    
+    // Verificar se email está verificado
+    if (!user.emailVerified) {
+      // Enviar novo código de verificação
+      await this.emailVerificationService.sendVerificationCode(email, user.id);
+      throw new UnauthorizedException('Email não verificado. Enviamos um novo código de verificação para seu email.');
+    }
+    
     const token = this.jwtService.sign({ userId: user.id });
     res.cookie('jwt', token, { httpOnly: true, sameSite: 'lax' });
     res.json({ 
@@ -413,7 +420,50 @@ export class AuthController {
   }
 
   /**
-   * POST /auth/verify-email - Verifica código de email
+   * POST /auth/verify-email-and-login - Verifica código e faz login (para novos registros)
+   */
+  @Post('verify-email-and-login')
+  async verifyEmailAndLogin(@Body() body: { email: string; code: string }, @Res() res: Response) {
+    const { email, code } = body;
+
+    if (!email || !code || code.length !== 6) {
+      throw new BadRequestException('Email e código de verificação são obrigatórios');
+    }
+
+    // Buscar usuário pelo email
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    
+    if (!user) {
+      throw new BadRequestException('Usuário não encontrado');
+    }
+
+    if (user.emailVerified) {
+      throw new BadRequestException('Este email já está verificado. Faça login normalmente.');
+    }
+
+    // Verificar código
+    const result = await this.emailVerificationService.verifyCode(user.id, code);
+
+    if (!result.success) {
+      throw new BadRequestException(result.message);
+    }
+
+    // Código válido - fazer login
+    const token = this.jwtService.sign({ userId: user.id });
+    res.cookie('jwt', token, { httpOnly: true, sameSite: 'lax' });
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      emailVerified: true,
+      authProvider: user.authProvider,
+      token,
+      message: 'Email verificado com sucesso!',
+    });
+  }
+
+  /**
+   * POST /auth/verify-email - Verifica código de email (para usuário já logado)
    */
   @Post('verify-email')
   @UseGuards(JwtAuthGuard)

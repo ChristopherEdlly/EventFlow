@@ -130,14 +130,27 @@ class ApiClient {
     name: string,
     email: string,
     password: string
-  ): Promise<{ token: string }> {
-    const response = await this.post<{ token: string }>('/auth/register', {
+  ): Promise<{ id: string; email: string; requiresVerification: boolean; message: string }> {
+    // Registro não retorna mais token - precisa verificar email primeiro
+    const response = await this.post<{ id: string; email: string; requiresVerification: boolean; message: string }>('/auth/register', {
       name,
       email,
       password,
     });
+    return response;
+  }
+
+  async verifyEmailAndLogin(email: string, code: string): Promise<{ token: string }> {
+    const response = await this.post<{ token: string }>('/auth/verify-email-and-login', {
+      email,
+      code,
+    });
     this.saveToken(response.token);
     return response;
+  }
+
+  async resendVerificationCode(email: string): Promise<{ message: string }> {
+    return this.post('/auth/send-verification', { email });
   }
 
   logout(): void {

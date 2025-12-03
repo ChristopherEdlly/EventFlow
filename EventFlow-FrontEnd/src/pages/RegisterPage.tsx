@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { api } from '../services/api';
 import type { ApiError } from '../services/api';
@@ -23,6 +23,15 @@ export default function RegisterPage({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Estado para verificação de email
+  const [showVerification, setShowVerification] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [verificationError, setVerificationError] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,13 +50,100 @@ export default function RegisterPage({
     setIsLoading(true);
 
     try {
-      await api.register(name, email, password);
-      onRegister();
+      const response = await api.register(name, email, password);
+      if (response.requiresVerification) {
+        // Mostrar tela de verificação
+        setRegisteredEmail(email);
+        setShowVerification(true);
+        setResendCooldown(60);
+        // Iniciar countdown
+        const interval = setInterval(() => {
+          setResendCooldown(prev => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } else {
+        onRegister();
+      }
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Failed to register. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCodeChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+    
+    const newCode = [...verificationCode];
+    newCode[index] = value.slice(-1);
+    setVerificationCode(newCode);
+    
+    // Auto-focus próximo input
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleCodeKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleCodePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pasted.length === 6) {
+      setVerificationCode(pasted.split(''));
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    const code = verificationCode.join('');
+    if (code.length !== 6) {
+      setVerificationError('Digite o código completo de 6 dígitos');
+      return;
+    }
+
+    setVerificationLoading(true);
+    setVerificationError('');
+
+    try {
+      await api.verifyEmailAndLogin(registeredEmail, code);
+      onRegister();
+    } catch (err) {
+      const apiError = err as ApiError;
+      setVerificationError(apiError.message || 'Código inválido. Tente novamente.');
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (resendCooldown > 0) return;
+
+    try {
+      await api.resendVerificationCode(registeredEmail);
+      setResendCooldown(60);
+      const interval = setInterval(() => {
+        setResendCooldown(prev => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      setVerificationError('');
+    } catch (err) {
+      const apiError = err as ApiError;
+      setVerificationError(apiError.message || 'Erro ao reenviar código');
     }
   };
 
@@ -130,11 +226,104 @@ export default function RegisterPage({
                 <InfoPanel />
               </div>
 
-              {/* Coluna direita - Formulário de Registro */}
+              {/* Coluna direita - Formulário de Registro ou Verificação */}
               <div className="w-full lg:w-1/2 flex items-center justify-center p-4 lg:p-6">
                 <div className="w-full max-w-md">
                   {/* Card branco do formulário */}
                   <div className="bg-white rounded-2xl shadow-xl p-5 lg:p-6">
+                    {showVerification ? (
+                      /* Tela de Verificação de Email */
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center"
+                      >
+                        <div className="mb-6">
+                          <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                            Verifique seu email
+                          </h2>
+                          <p className="text-gray-600 text-sm">
+                            Enviamos um código de 6 dígitos para
+                          </p>
+                          <p className="font-medium text-gray-900">{registeredEmail}</p>
+                        </div>
+
+                        {/* Inputs do código */}
+                        <div className="flex justify-center gap-2 mb-6">
+                          {verificationCode.map((digit, index) => (
+                            <input
+                              key={index}
+                              ref={el => { inputRefs.current[index] = el; }}
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={1}
+                              value={digit}
+                              onChange={e => handleCodeChange(index, e.target.value)}
+                              onKeyDown={e => handleCodeKeyDown(index, e)}
+                              onPaste={handleCodePaste}
+                              disabled={verificationLoading}
+                              className={`h-14 w-12 rounded-lg border-2 text-center text-2xl font-bold transition-colors
+                                ${verificationError ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-blue-500'}
+                                ${verificationLoading ? 'cursor-not-allowed bg-gray-100' : 'bg-white'}
+                              `}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Erro */}
+                        {verificationError && (
+                          <p className="text-red-600 text-sm mb-4">{verificationError}</p>
+                        )}
+
+                        {/* Botão verificar */}
+                        <button
+                          onClick={handleVerifyCode}
+                          disabled={verificationLoading || verificationCode.some(d => !d)}
+                          className="w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+                        >
+                          {verificationLoading ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                              </svg>
+                              Verificando...
+                            </span>
+                          ) : 'Verificar e entrar'}
+                        </button>
+
+                        {/* Reenviar código */}
+                        <p className="text-gray-600 text-sm">
+                          Não recebeu o código?{' '}
+                          <button
+                            onClick={handleResendCode}
+                            disabled={resendCooldown > 0}
+                            className="text-blue-600 hover:text-blue-700 font-medium disabled:text-gray-400"
+                          >
+                            {resendCooldown > 0 ? `Reenviar em ${resendCooldown}s` : 'Reenviar'}
+                          </button>
+                        </p>
+
+                        {/* Voltar */}
+                        <button
+                          onClick={() => {
+                            setShowVerification(false);
+                            setVerificationCode(['', '', '', '', '', '']);
+                            setVerificationError('');
+                          }}
+                          className="mt-4 text-gray-500 hover:text-gray-700 text-sm"
+                        >
+                          ← Voltar para o cadastro
+                        </button>
+                      </motion.div>
+                    ) : (
+                      /* Formulário de Registro */
+                      <>
                     {/* Header */}
                     <motion.div
                       variants={container}
@@ -439,6 +628,8 @@ export default function RegisterPage({
                         Entrar
                       </motion.button>
                     </motion.div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

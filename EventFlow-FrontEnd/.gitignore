@@ -9,4 +9,4 @@ dist/
 build/
 
 # If you need frontend-only exceptions, add them below
-
+.env
