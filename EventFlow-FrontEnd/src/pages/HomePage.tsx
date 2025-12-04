@@ -548,12 +548,12 @@ function EventCard({ event, onClick, getDaysUntil, isInvite, showManage }: Event
           )}
         </div>
         <div className="flex items-center gap-3 text-sm text-gray-500">
-          {event.time && <span>🕐 {event.time}</span>}
-          {event.location && <span className="truncate">📍 {event.location}</span>}
+          {event.time && <span className="flex-shrink-0">🕐 {event.time}</span>}
+          {event.location && <span className="truncate max-w-[150px]" title={event.location}>📍 {event.location}</span>}
         </div>
       </div>
 
-      {/* Tempo restante */}
+      {/* Tempo restante */}}
       <div className="flex-shrink-0 text-right hidden sm:block">
         <span className={`text-xs font-medium px-2 py-1 rounded-full ${
           isPast 
@@ -621,12 +621,12 @@ function InviteCard({ event, onClick, getDaysUntil, getStatusBadge }: InviteCard
           </span>
         </div>
         <div className="flex items-center gap-3 text-sm text-gray-500">
-          {event.time && <span>🕐 {event.time}</span>}
-          {event.location && <span className="truncate">📍 {event.location}</span>}
+          {event.time && <span className="flex-shrink-0">🕐 {event.time}</span>}
+          {event.location && <span className="truncate max-w-[150px]" title={event.location}>📍 {event.location}</span>}
         </div>
       </div>
 
-      {/* Ação pendente */}
+      {/* Ação pendente */}}
       {event.myGuestStatus === 'PENDING' && !isPast && (
         <div className="flex-shrink-0 hidden sm:block">
           <span className="px-3 py-1.5 bg-amber-500 text-white text-xs font-medium rounded-full animate-pulse">

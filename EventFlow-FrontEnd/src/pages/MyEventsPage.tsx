@@ -504,8 +504,8 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
 
                   {/* Local */}
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="text-emerald-500">📍</span>
-                    <span className={`truncate ${event.location ? 'text-gray-700' : 'text-gray-400 italic'}`}>
+                    <span className="text-emerald-500 flex-shrink-0">📍</span>
+                    <span className={`truncate max-w-[180px] ${event.location ? 'text-gray-700' : 'text-gray-400 italic'}`} title={event.location || undefined}>
                       {event.location || 'Online'}
                     </span>
                   </div>
