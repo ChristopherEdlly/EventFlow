@@ -553,11 +553,11 @@ function EventCard({ event, onClick, getDaysUntil, isInvite, showManage }: Event
         </div>
       </div>
 
-      {/* Tempo restante */}}
+      {/* Tempo restante */}
       <div className="flex-shrink-0 text-right hidden sm:block">
         <span className={`text-xs font-medium px-2 py-1 rounded-full ${
           isPast 
-            ? 'bg-gray-200 text-gray-600' 
+            ? 'bg-gray-200 text-gray-600'
             : 'bg-primary-100 text-primary-700'
         }`}>
           {isPast ? 'Passado' : getDaysUntil(event.date)}
@@ -626,7 +626,7 @@ function InviteCard({ event, onClick, getDaysUntil, getStatusBadge }: InviteCard
         </div>
       </div>
 
-      {/* Ação pendente */}}
+      {/* Ação pendente */}
       {event.myGuestStatus === 'PENDING' && !isPast && (
         <div className="flex-shrink-0 hidden sm:block">
           <span className="px-3 py-1.5 bg-amber-500 text-white text-xs font-medium rounded-full animate-pulse">
