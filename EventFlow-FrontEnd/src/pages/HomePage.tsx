@@ -509,17 +509,27 @@ function EventCard({ event, onClick, getDaysUntil, isInvite, showManage }: Event
           : 'bg-white border-gray-200 hover:border-primary-300 hover:shadow-md'
       }`}
     >
-      {/* Data */}
-      <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center ${
-        isPast ? 'bg-gray-200' : 'bg-gradient-to-br from-primary-500 to-secondary-600'
-      }`}>
-        <span className={`text-xs font-medium ${isPast ? 'text-gray-500' : 'text-white/80'}`}>
-          {new Date(event.date).toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase()}
-        </span>
-        <span className={`text-xl font-bold ${isPast ? 'text-gray-600' : 'text-white'}`}>
-          {new Date(event.date).getDate()}
-        </span>
-      </div>
+      {/* Imagem ou Data */}
+      {event.imageUrl ? (
+        <div className="flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden">
+          <img 
+            src={event.imageUrl} 
+            alt={event.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ) : (
+        <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center ${
+          isPast ? 'bg-gray-200' : 'bg-gradient-to-br from-primary-500 to-secondary-600'
+        }`}>
+          <span className={`text-xs font-medium ${isPast ? 'text-gray-500' : 'text-white/80'}`}>
+            {new Date(event.date).toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase()}
+          </span>
+          <span className={`text-xl font-bold ${isPast ? 'text-gray-600' : 'text-white'}`}>
+            {new Date(event.date).getDate()}
+          </span>
+        </div>
+      )}
 
       {/* Info */}
       <div className="flex-1 min-w-0">

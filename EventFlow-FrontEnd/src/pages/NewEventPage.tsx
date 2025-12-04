@@ -8,8 +8,9 @@ interface NewEventPageProps {
 export default function NewEventPage({ onBack }: NewEventPageProps) {
   const navigate = useNavigate();
 
-  const handleSuccess = () => {
-    navigate('/my-events');
+  const handleSuccess = (eventId: string) => {
+    // Redireciona para a página de detalhes do evento criado
+    navigate(`/events/${eventId}`);
   };
 
   const handleCancel = () => {
