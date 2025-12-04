@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { api } from './services/api';
 import { ToastProvider } from './context/ToastContext';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import PublicEventsPage from './pages/PublicEventsPage';
@@ -16,9 +14,9 @@ import ProfilePage from './pages/ProfilePage';
 import HistoryPage from './pages/HistoryPage';
 import MyEventsPage from './pages/MyEventsPage';
 import NewEventPage from './pages/NewEventPage';
-import EditEventPage from './pages/EditEventPage';
 import GuestsPage from './pages/GuestsPage';
 import ModerationPage from './pages/ModerationPage';
+import InvitePage from './pages/InvitePage';
 
 
 interface UserProfile {
@@ -31,8 +29,13 @@ interface UserProfile {
 // Componente wrapper para páginas autenticadas
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = api.isAuthenticated();
+  const location = window.location.pathname;
 
   if (!isAuthenticated) {
+    // Salvar a URL atual para redirecionar após login
+    if (location !== '/login' && location !== '/register') {
+      sessionStorage.setItem('redirectAfterLogin', location);
+    }
     return <Navigate to="/login" replace />;
   }
 
@@ -62,26 +65,6 @@ function GuestsWrapper({ onBack }: { onBack: () => void }) {
   return <GuestsPage eventId={id || ''} onBack={onBack} />;
 }
 
-// Wrapper para ResetPasswordPage que usa useLocation
-function ResetPasswordWrapper({ onBack, onSuccess }: { onBack: () => void; onSuccess: () => void }) {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const email = (location.state as { email?: string })?.email;
-
-  // Se não há email no state, redirecionar para forgot-password
-  useEffect(() => {
-    if (!email) {
-      navigate('/forgot-password', { replace: true });
-    }
-  }, [email, navigate]);
-
-  if (!email) {
-    return null;
-  }
-
-  return <ResetPasswordPage email={email} onBack={onBack} onSuccess={onSuccess} />;
-}
-
 // Componente interno que usa hooks do router
 function AppRoutes() {
   const navigate = useNavigate();
@@ -103,14 +86,21 @@ function AppRoutes() {
     } else {
       setCheckingAuth(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [navigate]);
 
   const handleLogin = async () => {
     try {
       const profile = await api.getProfile();
       setUserProfile(profile);
-      navigate('/');
+      
+      // Verificar se há URL para redirecionar após login
+      const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+      if (redirectUrl) {
+        sessionStorage.removeItem('redirectAfterLogin');
+        navigate(redirectUrl);
+      } else {
+        navigate('/');
+      }
     } catch {
       navigate('/');
     }
@@ -120,7 +110,15 @@ function AppRoutes() {
     try {
       const profile = await api.getProfile();
       setUserProfile(profile);
-      navigate('/');
+      
+      // Verificar se há URL para redirecionar após registro
+      const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+      if (redirectUrl) {
+        sessionStorage.removeItem('redirectAfterLogin');
+        navigate(redirectUrl);
+      } else {
+        navigate('/');
+      }
     } catch {
       navigate('/');
     }
@@ -170,7 +168,6 @@ function AppRoutes() {
             <LoginPage
               onLogin={handleLogin}
               onNavigateToRegister={() => navigate('/register')}
-              onNavigateToForgotPassword={() => navigate('/forgot-password')}
             />
           </PublicRoute>
         }
@@ -186,24 +183,11 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
+
+      {/* Rota de Convite (pública - mostra preview do evento) */}
       <Route
-        path="/forgot-password"
-        element={
-          <PublicRoute>
-            <ForgotPasswordPage
-              onBack={() => navigate('/login')}
-              onCodeSent={(email) => navigate('/reset-password', { state: { email } })}
-            />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/reset-password"
-        element={
-          <PublicRoute>
-            <ResetPasswordWrapper onBack={() => navigate('/forgot-password')} onSuccess={() => navigate('/login')} />
-          </PublicRoute>
-        }
+        path="/invite/:eventId"
+        element={<InvitePage />}
       />
 
       {/* Rotas Protegidas */}
@@ -218,7 +202,7 @@ function AppRoutes() {
               userName={userProfile?.name}
               userRole={userProfile?.role}
             >
-              <HomePage onViewEvent={handleViewEvent} onNavigate={handleNavigate} userName={userProfile?.name} />
+              <HomePage onViewEvent={handleViewEvent} onNavigate={handleNavigate} />
             </Layout>
           </ProtectedRoute>
         }
@@ -253,23 +237,6 @@ function AppRoutes() {
               userRole={userProfile?.role}
             >
               <NewEventPage onBack={() => navigate('/my-events')} />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/edit-event/:eventId"
-        element={
-          <ProtectedRoute>
-            <Layout
-              currentPage="myEvents"
-              onNavigate={handleNavigate}
-              onLogout={handleLogout}
-              userName={userProfile?.name}
-              userRole={userProfile?.role}
-            >
-              <EditEventPage />
             </Layout>
           </ProtectedRoute>
         }

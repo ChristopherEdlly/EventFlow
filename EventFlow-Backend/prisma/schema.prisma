@@ -26,6 +26,7 @@ model User {
   emailVerified    Boolean   @default(false)
   verificationCode String?
   verificationExpires DateTime?
+  pendingEmail     String?   // Novo email aguardando verificação
 
   // Ban system
   isBanned         Boolean   @default(false)

@@ -9,10 +9,9 @@ import GoogleLoginButton from '../components/GoogleLoginButton';
 interface LoginPageProps {
   onLogin: () => void;
   onNavigateToRegister: () => void;
-  onNavigateToForgotPassword?: () => void;
 }
 
-export default function LoginPage({ onLogin, onNavigateToRegister, onNavigateToForgotPassword }: LoginPageProps) {
+export default function LoginPage({ onLogin, onNavigateToRegister }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -287,19 +286,6 @@ export default function LoginPage({ onLogin, onNavigateToRegister, onNavigateToF
                           )}
                         </motion.button>
                       </motion.div>
-
-                      {/* Forgot Password Link */}
-                      {onNavigateToForgotPassword && (
-                        <motion.div variants={item} className="text-center mt-3">
-                          <button
-                            type="button"
-                            onClick={onNavigateToForgotPassword}
-                            className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
-                          >
-                            Esqueceu sua senha?
-                          </button>
-                        </motion.div>
-                      )}
                     </motion.form>
 
                     {/* Divider - OU */}

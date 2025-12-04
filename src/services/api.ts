@@ -172,34 +172,19 @@ class ApiClient {
     role: string;
     authProvider: string;
     emailVerified: boolean;
-    pendingEmail: string | null;
     createdAt: string
   }> {
     return this.get('/auth/profile');
   }
 
-  async updateProfile(data: { name?: string }): Promise<{ id: string; name: string; email: string; createdAt: string }> {
+  async updateProfile(data: { name?: string; email?: string }): Promise<{
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    createdAt: string
+  }> {
     return this.patch('/auth/profile', data);
-  }
-
-  async requestEmailChange(newEmail: string, password?: string): Promise<{ message: string; pendingEmail: string }> {
-    return this.post('/auth/request-email-change', { newEmail, password });
-  }
-
-  async verifyEmail(code: string): Promise<{ message: string; emailVerified: boolean; emailChanged?: boolean }> {
-    return this.post('/auth/verify-email', { code });
-  }
-
-  async cancelEmailChange(): Promise<{ message: string }> {
-    return this.post('/auth/cancel-email-change');
-  }
-
-  async resendVerification(): Promise<{ message: string }> {
-    return this.post('/auth/resend-verification');
-  }
-
-  async getVerificationStatus(): Promise<{ emailVerified: boolean; authProvider: string }> {
-    return this.get('/auth/verification-status');
   }
 
   async updatePassword(data: { currentPassword: string; newPassword: string }): Promise<{ message: string }> {
@@ -212,17 +197,16 @@ class ApiClient {
     return result;
   }
 
-  // Password Recovery
-  async forgotPassword(email: string): Promise<{ message: string }> {
-    return this.post('/auth/forgot-password', { email });
+  async verifyEmail(code: string): Promise<{ message: string; emailVerified: boolean }> {
+    return this.post('/auth/verify-email', { code });
   }
 
-  async verifyResetCode(email: string, code: string): Promise<{ message: string; valid: boolean }> {
-    return this.post('/auth/verify-reset-code', { email, code });
+  async resendVerification(): Promise<{ message: string }> {
+    return this.post('/auth/resend-verification');
   }
 
-  async resetPassword(email: string, code: string, newPassword: string): Promise<{ message: string }> {
-    return this.post('/auth/reset-password', { email, code, newPassword });
+  async getVerificationStatus(): Promise<{ emailVerified: boolean; authProvider: string }> {
+    return this.get('/auth/verification-status');
   }
 }
 

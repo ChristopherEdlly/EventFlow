@@ -20,6 +20,7 @@ describe('AuthService', () => {
     emailVerified: true,
     verificationCode: null,
     verificationExpires: null,
+    pendingEmail: null,
     isBanned: false,
     bannedAt: null,
     bannedUntil: null,
