@@ -638,6 +638,36 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
         </div>
       )}
 
+      {/* Anúncios para participantes */}
+      {!isOwner && currentUserGuest && announcements.length > 0 && (
+        <div className="mb-6 bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+          <div className="p-4 border-b border-gray-100 bg-orange-50">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+              </svg>
+              Anúncios do Organizador
+            </h2>
+          </div>
+          <div className="p-4 space-y-3 max-h-[400px] overflow-y-auto">
+            {announcements.map((announcement) => (
+              <div key={announcement.id} className="p-4 bg-orange-50/50 border border-orange-100 rounded-xl">
+                <p className="text-gray-800 whitespace-pre-wrap">{announcement.message}</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  {new Date(announcement.createdAt).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Modal de Edição de Evento */}
       {isEditModalOpen && event && (
         <EditEventModal

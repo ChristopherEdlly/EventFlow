@@ -33,13 +33,14 @@ export default function HomePage({ onViewEvent, onNavigate, userName = '' }: Hom
       setIsLoading(true);
       
       // Carregar dados em paralelo
-      const [events, invitesData] = await Promise.all([
+      // Usar getMyParticipations para incluir eventos públicos inscritos + convites privados
+      const [events, participationsData] = await Promise.all([
         eventsService.getMyEvents(),
-        eventsService.getMyInvites()
+        eventsService.getMyParticipations()
       ]);
 
       setMyEvents(events);
-      setInvites(invitesData as InviteEvent[]);
+      setInvites(participationsData as InviteEvent[]);
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
     } finally {
