@@ -801,7 +801,9 @@ export default function EventDetailsPage({ eventId, onBack }: EventDetailsPagePr
                   if (!newAnnouncement.title.trim() || !newAnnouncement.content.trim()) return;
                   setIsCreatingAnnouncement(true);
                   try {
-                    await api.post(`/events/${eventId}/announcements`, newAnnouncement);
+                    // Combinar título e conteúdo em uma mensagem
+                    const message = `${newAnnouncement.title.trim()}\n\n${newAnnouncement.content.trim()}`;
+                    await api.post(`/events/${eventId}/announcements`, { message });
                     await loadData();
                     setShowAnnouncementModal(false);
                     setNewAnnouncement({ title: '', content: '' });

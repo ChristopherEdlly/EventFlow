@@ -39,7 +39,8 @@ export default function AnnouncementSection({ eventId, isOwner }: AnnouncementSe
   };
 
   const handleCreateAnnouncement = async () => {
-    if (!newMessage.trim()) {
+    const trimmedMessage = newMessage.trim();
+    if (!trimmedMessage) {
       setError('A mensagem não pode estar vazia');
       return;
     }
@@ -48,7 +49,7 @@ export default function AnnouncementSection({ eventId, isOwner }: AnnouncementSe
     setError('');
 
     try {
-      await eventsService.createAnnouncement(eventId, newMessage);
+      await eventsService.createAnnouncement(eventId, trimmedMessage);
       setNewMessage('');
       setShowModal(false);
       await loadAnnouncements();
@@ -61,7 +62,8 @@ export default function AnnouncementSection({ eventId, isOwner }: AnnouncementSe
   };
 
   const handleEditAnnouncement = async () => {
-    if (!editingAnnouncement || !editMessage.trim()) {
+    const trimmedMessage = editMessage.trim();
+    if (!editingAnnouncement || !trimmedMessage) {
       setError('A mensagem não pode estar vazia');
       return;
     }
@@ -70,7 +72,7 @@ export default function AnnouncementSection({ eventId, isOwner }: AnnouncementSe
     setError('');
 
     try {
-      await eventsService.updateAnnouncement(eventId, editingAnnouncement.id, editMessage);
+      await eventsService.updateAnnouncement(eventId, editingAnnouncement.id, trimmedMessage);
       setEditingAnnouncement(null);
       setEditMessage('');
       await loadAnnouncements();
@@ -113,7 +115,11 @@ export default function AnnouncementSection({ eventId, isOwner }: AnnouncementSe
         </h3>
         {isOwner && (
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => {
+              setError('');
+              setNewMessage('');
+              setShowModal(true);
+            }}
             className="flex items-center gap-2 px-4 py-2 bg-info-600 hover:bg-info-700 text-white font-medium rounded-lg transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
