@@ -177,6 +177,18 @@ const EventFormWizard: React.FC<EventFormWizardProps> = ({
         // Create new event
         const response = await api.post<{ id: string }>('/events', eventData);
         responseId = response.id;
+
+        // Se há convidados para adicionar, envia os convites
+        if (formData.guestEmails.length > 0) {
+          try {
+            await api.post(`/events/${responseId}/guests`, {
+              emails: formData.guestEmails,
+            });
+          } catch (guestError) {
+            console.error('Erro ao adicionar convidados:', guestError);
+            // Não bloqueia a criação do evento se falhar ao adicionar convidados
+          }
+        }
       }
       
       if (onSuccess) {

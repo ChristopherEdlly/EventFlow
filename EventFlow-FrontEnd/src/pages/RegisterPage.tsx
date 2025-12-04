@@ -167,7 +167,7 @@ export default function RegisterPage({
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
       {/* Animated background */}
-      <div className="absolute inset-0 opacity-30">
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
         <GeometricPatterns />
       </div>
 

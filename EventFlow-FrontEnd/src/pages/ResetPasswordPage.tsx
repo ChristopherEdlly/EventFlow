@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { api } from '../services/api';
 import type { ApiError } from '../services/api';
 import Toast from '../components/Toast';
+import GeometricPatterns from '../components/GeometricPatterns';
 
 interface ResetPasswordPageProps {
   email: string;
@@ -91,7 +92,12 @@ export default function ResetPasswordPage({ email, onBack, onSuccess }: ResetPas
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 flex items-center justify-center p-4">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
+      {/* Animated background */}
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
+        <GeometricPatterns />
+      </div>
+
       {/* Toast Notifications */}
       {showToast && (
         <Toast
@@ -101,42 +107,86 @@ export default function ResetPasswordPage({ email, onBack, onSuccess }: ResetPas
         />
       )}
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-full mb-4">
-              <svg className="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {codeVerified ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                )}
-              </svg>
-            </div>
-            <h1 className="text-2xl font-bold text-neutral-900 mb-2">
-              {codeVerified ? 'Definir nova senha' : 'Verificar código'}
-            </h1>
-            <p className="text-neutral-600">
-              {codeVerified ? (
-                'Escolha uma senha forte e segura'
-              ) : (
-                <>
-                  Digite o código de 6 dígitos enviado para <strong>{email}</strong>
-                </>
-              )}
-            </p>
-          </div>
+      {/* Logo + Título no topo */}
+      <div className="relative z-20 pt-8 pb-4">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col items-center"
+        >
+          <motion.div
+            animate={{
+              y: [0, -5, 0],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            className="inline-flex items-center justify-center w-14 h-14 bg-white/25 backdrop-blur-lg rounded-2xl shadow-2xl mb-3 border border-white/30"
+          >
+            <svg
+              className="w-8 h-8 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </motion.div>
+          <h1 className="text-2xl font-bold text-white mb-1">EventFlow</h1>
+          <p className="text-white/90 text-sm">{codeVerified ? 'Nova senha' : 'Verificar código'}</p>
+        </motion.div>
+      </div>
+
+      {/* Container principal */}
+      <div className="relative z-10 flex items-center justify-center px-4 pb-8">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="w-full max-w-md"
+        >
+          {/* Card glassmorphism */}
+          <div className="bg-white/10 backdrop-blur-2xl rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.3)] border border-white/20 overflow-hidden p-1">
+            {/* Card branco do formulário */}
+            <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8">
+              {/* Header */}
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-4">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {codeVerified ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    )}
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  {codeVerified ? 'Definir nova senha' : 'Verificar código'}
+                </h2>
+                <p className="text-gray-600 text-sm">
+                  {codeVerified ? (
+                    'Escolha uma senha forte e segura'
+                  ) : (
+                    <>
+                      Digite o código de 6 dígitos enviado para <strong className="text-gray-900">{email}</strong>
+                    </>
+                  )}
+                </p>
+              </div>
 
           {!codeVerified ? (
             /* Step 1: Verify Code */
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div>
-                <label htmlFor="code" className="block text-sm font-medium text-neutral-700 mb-2">
+                <label htmlFor="code" className="block text-sm font-semibold text-gray-700 mb-2">
                   Código de Verificação
                 </label>
                 <input
@@ -146,7 +196,7 @@ export default function ResetPasswordPage({ email, onBack, onSuccess }: ResetPas
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"
                   maxLength={6}
-                  className="w-full px-4 py-3 bg-white text-neutral-900 text-center text-2xl font-mono tracking-widest placeholder-neutral-400 border-2 border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                  className="w-full px-4 py-3 bg-gray-50 text-gray-900 text-center text-2xl font-mono tracking-widest placeholder-gray-400 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none hover:border-gray-300"
                   disabled={isVerifying}
                   autoFocus
                 />
@@ -154,17 +204,24 @@ export default function ResetPasswordPage({ email, onBack, onSuccess }: ResetPas
 
               <div className="flex items-center justify-between">
                 <button
-                  onClick={handleResendCode}
-                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleResendCode();
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline cursor-pointer"
                 >
                   Reenviar código
                 </button>
               </div>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
                 onClick={handleVerifyCode}
                 disabled={isVerifying || code.length !== 6}
-                className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
               >
                 {isVerifying && (
                   <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -173,13 +230,13 @@ export default function ResetPasswordPage({ email, onBack, onSuccess }: ResetPas
                   </svg>
                 )}
                 {isVerifying ? 'Verificando...' : 'Verificar código'}
-              </button>
+              </motion.button>
             </div>
           ) : (
             /* Step 2: Set New Password */
-            <form onSubmit={handleResetPassword} className="space-y-6">
+            <form onSubmit={handleResetPassword} className="space-y-5">
               <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-neutral-700 mb-2">
+                <label htmlFor="newPassword" className="block text-sm font-semibold text-gray-700 mb-2">
                   Nova Senha
                 </label>
                 <div className="relative">
@@ -189,14 +246,14 @@ export default function ResetPasswordPage({ email, onBack, onSuccess }: ResetPas
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Mínimo 6 caracteres"
-                    className="w-full px-4 py-3 bg-white text-neutral-900 placeholder-neutral-400 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                    className="w-full px-4 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none hover:border-gray-300"
                     disabled={isResetting}
                     autoFocus
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       {showPassword ? (
@@ -210,7 +267,7 @@ export default function ResetPasswordPage({ email, onBack, onSuccess }: ResetPas
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-neutral-700 mb-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
                   Confirmar Nova Senha
                 </label>
                 <div className="relative">
@@ -220,13 +277,13 @@ export default function ResetPasswordPage({ email, onBack, onSuccess }: ResetPas
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Digite a senha novamente"
-                    className="w-full px-4 py-3 bg-white text-neutral-900 placeholder-neutral-400 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                    className="w-full px-4 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none hover:border-gray-300"
                     disabled={isResetting}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       {showConfirmPassword ? (
@@ -239,10 +296,12 @@ export default function ResetPasswordPage({ email, onBack, onSuccess }: ResetPas
                 </div>
               </div>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isResetting || !newPassword || !confirmPassword}
-                className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
               >
                 {isResetting && (
                   <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -251,30 +310,36 @@ export default function ResetPasswordPage({ email, onBack, onSuccess }: ResetPas
                   </svg>
                 )}
                 {isResetting ? 'Redefinindo...' : 'Redefinir senha'}
-              </button>
+              </motion.button>
             </form>
           )}
 
           {/* Back */}
           <div className="mt-6 text-center">
             <button
-              onClick={onBack}
-              className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                onBack();
+              }}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline cursor-pointer"
             >
               ← Voltar
             </button>
           </div>
-        </div>
-
-        {/* Info */}
-        {!codeVerified && (
-          <div className="mt-6 text-center">
-            <p className="text-sm text-neutral-600">
-              Não recebeu o código? Verifique sua caixa de spam
-            </p>
+            </div>
           </div>
-        )}
-      </motion.div>
+
+          {/* Info */}
+          {!codeVerified && (
+            <div className="mt-6 text-center">
+              <p className="text-sm text-white/80">
+                Não recebeu o código? Verifique sua caixa de spam
+              </p>
+            </div>
+          )}
+        </motion.div>
+      </div>
     </div>
   );
 }

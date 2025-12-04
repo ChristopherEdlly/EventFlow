@@ -29,6 +29,9 @@ export interface EventFormData {
   // Step 4: Media & Tags
   imageUrl: string;
   tags: string[];
+
+  // Step 6: Convidados (opcional)
+  guestEmails: string[];
 }
 
 export const defaultFormData: EventFormData = {
@@ -51,6 +54,7 @@ export const defaultFormData: EventFormData = {
   rsvpDeadline: '',
   imageUrl: '',
   tags: [],
+  guestEmails: [],
 };
 
 export interface StepProps {
