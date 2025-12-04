@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { eventsService, type Event } from '../services/events';
 import CompactCalendar from '../components/CompactCalendar';
@@ -17,6 +18,7 @@ interface CalendarEvent extends Event {
 }
 
 export default function DashboardPage({ onViewEvent }: DashboardPageProps) {
+  const navigate = useNavigate();
   const [myEvents, setMyEvents] = useState<Event[]>([]);
   const [invitedEvents, setInvitedEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,7 +63,7 @@ export default function DashboardPage({ onViewEvent }: DashboardPageProps) {
 
   // Função para abrir página de criar evento com data pré-selecionada
   const handleDayClick = (date: Date) => {
-    window.location.href = `/new-event?date=${date.toISOString()}`;
+    navigate(`/new-event?date=${date.toISOString()}`);
   };
 
   return (

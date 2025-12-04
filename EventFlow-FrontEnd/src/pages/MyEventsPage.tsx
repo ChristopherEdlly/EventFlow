@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { eventsService, type Event } from '../services/events';
 import type { ApiError } from '../services/api';
 import ConfirmModal from '../components/ConfirmModal';
-import EditEventModal from '../components/EditEventModal';
 import GradientHeader from '../components/GradientHeader';
-import { HeaderSkeleton, TableSkeleton } from '../components/Skeleton';
+import { HeaderSkeleton, EventGridSkeleton } from '../components/Skeleton';
 import EnhancedEmptyState from '../components/EnhancedEmptyState';
 
 interface MyEventsPageProps {
@@ -13,16 +13,16 @@ interface MyEventsPageProps {
 }
 
 export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; eventId: string | null }>({ isOpen: false, eventId: null });
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
-  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; eventId: string | null }>({ isOpen: false, eventId: null });
-  const [editModal, setEditModal] = useState<{ isOpen: boolean; event: Event | null }>({ isOpen: false, event: null });
 
   useEffect(() => {
     loadEvents();
@@ -83,7 +83,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
             <div className="w-40 h-10 bg-gray-200 rounded-lg" />
           </div>
         </div>
-        <TableSkeleton rows={5} columns={6} />
+        <EventGridSkeleton count={6} />
       </div>
     );
   }
@@ -105,7 +105,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
         ]}
         actions={
           <button
-            onClick={() => window.location.href = '/new-event'}
+            onClick={() => navigate('/new-event')}
             className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl font-medium transition-colors flex items-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,7 +203,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
           }
           action={!searchTerm ? {
             label: 'Criar Primeiro Evento',
-            onClick: () => window.location.href = '/new-event',
+            onClick: () => navigate('/new-event'),
           } : undefined}
           secondaryAction={searchTerm ? {
             label: 'Limpar Busca',
@@ -337,7 +337,7 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
                               onClick={() => {
                                 setOpenMenuId(null);
                                 setMenuPosition(null);
-                                setEditModal({ isOpen: true, event });
+                                navigate(`/edit-event/${event.id}`);
                               }}
                               className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                             >
@@ -370,41 +370,202 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
           </table>
         </motion.div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event) => (
-            <div
-              key={event.id}
-              onClick={() => onViewEvent(event.id)}
-              className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="font-semibold text-gray-900 text-lg">{event.title}</h3>
-                {/* status badge removid
-                o */}
-              </div>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span>{new Date(event.date).toLocaleDateString('pt-BR')}</span>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {filteredEvents.map((event, index) => {
+            const eventDate = new Date(event.date);
+            const isPast = eventDate < new Date();
+            const daysUntil = Math.ceil((eventDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+            
+            // Formatar data
+            const formattedDate = (() => {
+              let dateObj;
+              if (event.time) {
+                const [hour, minute] = event.time.split(':');
+                dateObj = new Date(Date.UTC(
+                  eventDate.getUTCFullYear(),
+                  eventDate.getUTCMonth(),
+                  eventDate.getUTCDate(),
+                  Number(hour),
+                  Number(minute)
+                ));
+              } else {
+                dateObj = new Date(Date.UTC(
+                  eventDate.getUTCFullYear(),
+                  eventDate.getUTCMonth(),
+                  eventDate.getUTCDate()
+                ));
+              }
+              return {
+                day: dateObj.getUTCDate(),
+                month: dateObj.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''),
+                weekday: dateObj.toLocaleDateString('pt-BR', { weekday: 'short' }),
+                full: dateObj.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })
+              };
+            })();
+            
+            // Calcular ocupação
+            const guestCount = event._count?.guests || 0;
+            const occupancyPercent = event.capacity ? Math.min((guestCount / event.capacity) * 100, 100) : 0;
+            
+            // Status badge
+            const getStatusBadge = () => {
+              switch (event.availability) {
+                case 'PUBLISHED':
+                  return { bg: 'bg-emerald-500', text: 'Publicado', icon: '✓' };
+                case 'CANCELLED':
+                  return { bg: 'bg-red-500', text: 'Cancelado', icon: '✕' };
+                case 'COMPLETED':
+                  return { bg: 'bg-gray-500', text: 'Concluído', icon: '✓' };
+                default:
+                  return { bg: 'bg-amber-500', text: 'Rascunho', icon: '✎' };
+              }
+            };
+            const statusBadge = getStatusBadge();
+            
+            return (
+              <motion.div
+                key={event.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
+                className={`bg-white rounded-2xl shadow-sm border overflow-hidden group cursor-pointer transition-all duration-300 ${
+                  isPast 
+                    ? 'opacity-70 border-gray-200' 
+                    : 'border-gray-200 hover:border-primary-300 hover:shadow-xl'
+                }`}
+              >
+                {/* Image Area - Header */}
+                <div className="relative h-32 bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-500 overflow-hidden">
+                  {/* Ícone central decorativo */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                      <span className="text-2xl">📅</span>
+                    </div>
+                  </div>
+
+                  {/* Overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+
+                  {/* Badges no topo */}
+                  <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between">
+                    {/* Badge esquerdo - Status */}
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-white shadow-sm ${statusBadge.bg}`}>
+                      {statusBadge.icon} {statusBadge.text}
+                    </span>
+
+                    {/* Badge direito - Visibilidade */}
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-sm ${
+                      event.visibility === 'PUBLIC' 
+                        ? 'bg-emerald-500 text-white' 
+                        : 'bg-amber-500 text-white'
+                    }`}>
+                      {event.visibility === 'PUBLIC' ? '🌐 Público' : '🔒 Privado'}
+                    </span>
+                  </div>
+
+                  {/* Título sobre a imagem */}
+                  <div className="absolute bottom-2.5 left-2.5 right-2.5">
+                    <h3 className="font-bold text-white text-lg leading-tight drop-shadow-md line-clamp-1">
+                      {event.title}
+                    </h3>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  </svg>
-                  <span className="truncate">{event.location || 'Online'}</span>
+
+                {/* Conteúdo */}
+                <div className="p-4 space-y-3">
+                  {/* Data & Hora */}
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-primary-500">📅</span>
+                    <span className="font-medium text-gray-700 capitalize">
+                      {formattedDate.weekday}, {formattedDate.full}
+                    </span>
+                    {event.time && (
+                      <span className="text-gray-400">• {event.time}</span>
+                    )}
+                  </div>
+
+                  {/* Local */}
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-emerald-500">📍</span>
+                    <span className={`truncate ${event.location ? 'text-gray-700' : 'text-gray-400 italic'}`}>
+                      {event.location || 'Online'}
+                    </span>
+                  </div>
+
+                  {/* Participantes & Vagas */}
+                  <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-blue-500">👥</span>
+                      <span className="text-gray-600">
+                        {guestCount} {guestCount === 1 ? 'inscrito' : 'inscritos'}
+                      </span>
+                    </div>
+                    {event.capacity && (
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        occupancyPercent >= 90 
+                          ? 'bg-red-100 text-red-700' 
+                          : occupancyPercent >= 70 
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-emerald-100 text-emerald-700'
+                      }`}>
+                        {event.capacity - guestCount > 0 
+                          ? `${event.capacity - guestCount} vagas`
+                          : 'Lotado'
+                        }
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Botões de ação */}
+                  <div className="flex gap-2 pt-2">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewEvent(event.id);
+                      }}
+                      className="flex-1 py-2 px-3 rounded-lg font-medium text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      Ver
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/edit-event/${event.id}`);
+                      }}
+                      className="flex-1 py-2 px-3 rounded-lg font-medium text-sm bg-primary-50 text-primary-700 hover:bg-primary-100 transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Editar
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteModal({ isOpen: true, eventId: event.id });
+                      }}
+                      className="py-2 px-3 rounded-lg font-medium text-sm bg-red-50 text-red-600 hover:bg-red-100 transition-colors flex items-center justify-center"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  <span>{event._count?.guests || 0}/{event.capacity || 200}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              </motion.div>
+            );
+          })}
+        </motion.div>
       )}
 
       {/* Modal de Confirmação de Exclusão */}
@@ -418,18 +579,6 @@ export default function MyEventsPage({ onViewEvent }: MyEventsPageProps) {
         cancelText="Cancelar"
         type="danger"
       />
-
-      {/* Modal de Edição de Evento */}
-      {editModal.event && (
-        <EditEventModal
-          event={editModal.event}
-          onClose={() => setEditModal({ isOpen: false, event: null })}
-          onSuccess={() => {
-            loadEvents();
-            setEditModal({ isOpen: false, event: null });
-          }}
-        />
-      )}
     </div>
   );
 }

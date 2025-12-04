@@ -109,88 +109,172 @@ export default function PublicEventsPage({ onBack, onViewEvent }: PublicEventsPa
           transition={{ duration: 0.3 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {filteredEvents.map((event, index) => (
-            <motion.div
-              key={event.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 hover:border-primary-300 group cursor-pointer"
-              onClick={() => onViewEvent(event.id)}
-            >
-              <div className="p-6">
-                  <h3 className="text-lg font-semibold text-neutral-900 group-hover:text-primary-700 transition-colors mb-3">
-                    {event.title}
-                  </h3>
-
-                  {event.description && (
-                    <p className="text-neutral-600 text-sm mb-4 line-clamp-2">
-                      {event.description}
-                    </p>
-                  )}
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-neutral-600">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      {(() => {
-                        const eventDate = new Date(event.date);
-                        let dateObj;
-                        if (event.time) {
-                          const [hour, minute] = event.time.split(':');
-                          dateObj = new Date(Date.UTC(
-                            eventDate.getUTCFullYear(),
-                            eventDate.getUTCMonth(),
-                            eventDate.getUTCDate(),
-                            Number(hour),
-                            Number(minute)
-                          ));
-                        } else {
-                          dateObj = new Date(Date.UTC(
-                            eventDate.getUTCFullYear(),
-                            eventDate.getUTCMonth(),
-                            eventDate.getUTCDate()
-                          ));
-                        }
-                        return dateObj.toLocaleDateString('pt-BR', {
-                          day: '2-digit',
-                          month: 'long',
-                          year: 'numeric'
-                        });
-                      })()}
-                      {event.time && ` às ${event.time}`}
+          {filteredEvents.map((event, index) => {
+            const eventDate = new Date(event.date);
+            const isPast = eventDate < new Date();
+            const daysUntil = Math.ceil((eventDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+            
+            // Formatar data
+            const formattedDate = (() => {
+              let dateObj;
+              if (event.time) {
+                const [hour, minute] = event.time.split(':');
+                dateObj = new Date(Date.UTC(
+                  eventDate.getUTCFullYear(),
+                  eventDate.getUTCMonth(),
+                  eventDate.getUTCDate(),
+                  Number(hour),
+                  Number(minute)
+                ));
+              } else {
+                dateObj = new Date(Date.UTC(
+                  eventDate.getUTCFullYear(),
+                  eventDate.getUTCMonth(),
+                  eventDate.getUTCDate()
+                ));
+              }
+              return {
+                day: dateObj.getUTCDate(),
+                month: dateObj.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''),
+                weekday: dateObj.toLocaleDateString('pt-BR', { weekday: 'short' }),
+                full: dateObj.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })
+              };
+            })();
+            
+            // Calcular ocupação
+            const guestCount = event._count?.guests || 0;
+            const occupancyPercent = event.capacity ? Math.min((guestCount / event.capacity) * 100, 100) : 0;
+            const isAlmostFull = event.capacity && occupancyPercent >= 80;
+            
+            return (
+              <motion.div
+                key={event.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
+                className={`bg-white rounded-2xl shadow-sm border overflow-hidden group cursor-pointer transition-all duration-300 ${
+                  isPast 
+                    ? 'opacity-60 border-gray-200' 
+                    : 'border-gray-200 hover:border-primary-300 hover:shadow-xl'
+                }`}
+                onClick={() => onViewEvent(event.id)}
+              >
+                {/* Image Area - Header */}
+                <div className="relative h-36 bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-500 overflow-hidden">
+                  {/* Ícone central decorativo */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                      <span className="text-3xl">📅</span>
                     </div>
+                  </div>
 
-                    {event.location && (
-                      <div className="flex items-center gap-2 text-sm text-neutral-600">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        {event.location}
-                      </div>
-                    )}
+                  {/* Overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
 
-                    {event._count && (
-                      <div className="flex items-center gap-2 text-sm text-neutral-600">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        {event._count.guests} {event._count.guests === 1 ? 'confirmado' : 'confirmados'}
-                        {event.capacity && ` de ${event.capacity}`}
-                      </div>
+                  {/* Badges no topo */}
+                  <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between">
+                    {/* Badge esquerdo - Contagem regressiva ou status */}
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-white/90 text-gray-700 shadow-sm">
+                      {isPast ? (
+                        <>⏰ Encerrado</>
+                      ) : daysUntil === 0 ? (
+                        <span className="text-amber-600 font-bold">🔥 Hoje!</span>
+                      ) : daysUntil === 1 ? (
+                        <span className="text-primary-600 font-semibold">⏰ Amanhã!</span>
+                      ) : daysUntil <= 7 ? (
+                        <span className="text-primary-600">📆 Em {daysUntil} dias</span>
+                      ) : (
+                        <>📅 {formattedDate.full}</>
+                      )}
+                    </span>
+
+                    {/* Badge direito - Público + Vagas */}
+                    {isAlmostFull && !isPast ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-red-500 text-white shadow-sm">
+                        🎟️ Últimas vagas!
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-500 text-white shadow-sm">
+                        🌐 Público
+                      </span>
                     )}
                   </div>
 
-                  <button className="w-full py-2 px-4 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg">
-                    Ver Detalhes
+                  {/* Título sobre a imagem */}
+                  <div className="absolute bottom-2.5 left-2.5 right-2.5">
+                    <h3 className="font-bold text-white text-lg leading-tight drop-shadow-md line-clamp-2">
+                      {event.title}
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Conteúdo */}
+                <div className="p-4 space-y-3">
+                  {/* Data & Hora */}
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-primary-500">📅</span>
+                    <span className="font-medium text-gray-700 capitalize">
+                      {formattedDate.weekday}, {formattedDate.full}
+                    </span>
+                    {event.time && (
+                      <span className="text-gray-400">• {event.time}</span>
+                    )}
+                  </div>
+
+                  {/* Local */}
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-emerald-500">📍</span>
+                    <span className={`truncate ${event.location ? 'text-gray-700' : 'text-gray-400 italic'}`}>
+                      {event.location || 'Local a definir'}
+                    </span>
+                  </div>
+
+                  {/* Participantes & Vagas */}
+                  <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-blue-500">👥</span>
+                      <span className="text-gray-600">
+                        {guestCount} {guestCount === 1 ? 'confirmado' : 'confirmados'}
+                      </span>
+                    </div>
+                    {event.capacity && (
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        occupancyPercent >= 90 
+                          ? 'bg-red-100 text-red-700' 
+                          : occupancyPercent >= 70 
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-emerald-100 text-emerald-700'
+                      }`}>
+                        {event.capacity - guestCount > 0 
+                          ? `${event.capacity - guestCount} vagas`
+                          : 'Lotado'
+                        }
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Botão */}
+                  <button 
+                    className={`w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+                      isPast 
+                        ? 'bg-gray-100 text-gray-500'
+                        : 'bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white shadow-md hover:shadow-lg'
+                    }`}
+                  >
+                    {isPast ? 'Ver Resumo' : 'Ver Evento'}
+                    {!isPast && (
+                      <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    )}
                   </button>
                 </div>
               </motion.div>
-            ))}
-          </motion.div>
-        )
+            );
+          })}
+        </motion.div>
+      )
       }
     </div>
   );

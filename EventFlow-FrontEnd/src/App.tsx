@@ -14,6 +14,7 @@ import ProfilePage from './pages/ProfilePage';
 import HistoryPage from './pages/HistoryPage';
 import MyEventsPage from './pages/MyEventsPage';
 import NewEventPage from './pages/NewEventPage';
+import EditEventPage from './pages/EditEventPage';
 import GuestsPage from './pages/GuestsPage';
 import ModerationPage from './pages/ModerationPage';
 
@@ -209,6 +210,23 @@ function AppRoutes() {
               userRole={userProfile?.role}
             >
               <NewEventPage onBack={() => navigate('/my-events')} />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/edit-event/:eventId"
+        element={
+          <ProtectedRoute>
+            <Layout
+              currentPage="myEvents"
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+              userName={userProfile?.name}
+              userRole={userProfile?.role}
+            >
+              <EditEventPage />
             </Layout>
           </ProtectedRoute>
         }
