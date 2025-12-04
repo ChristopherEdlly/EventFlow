@@ -81,7 +81,8 @@ function AppRoutes() {
     } else {
       setCheckingAuth(false);
     }
-  }, [navigate]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleLogin = async () => {
     try {
@@ -175,7 +176,7 @@ function AppRoutes() {
               userName={userProfile?.name}
               userRole={userProfile?.role}
             >
-              <HomePage onViewEvent={handleViewEvent} onNavigate={handleNavigate} />
+              <HomePage onViewEvent={handleViewEvent} onNavigate={handleNavigate} userName={userProfile?.name} />
             </Layout>
           </ProtectedRoute>
         }

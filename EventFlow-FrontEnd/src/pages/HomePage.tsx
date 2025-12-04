@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { eventsService, type Event, type GuestStatus } from '../services/events';
-import { api } from '../services/api';
 import GradientHeader from '../components/GradientHeader';
 import { HeaderSkeleton, EventCardSkeleton } from '../components/Skeleton';
 import EnhancedEmptyState from '../components/EnhancedEmptyState';
@@ -9,6 +8,7 @@ import EnhancedEmptyState from '../components/EnhancedEmptyState';
 interface HomePageProps {
   onViewEvent: (eventId: string) => void;
   onNavigate: (page: string) => void;
+  userName?: string;
 }
 
 type TabType = 'upcoming' | 'myEvents' | 'invites';
@@ -18,12 +18,11 @@ interface InviteEvent extends Event {
   myGuestId?: string;
 }
 
-export default function HomePage({ onViewEvent, onNavigate }: HomePageProps) {
+export default function HomePage({ onViewEvent, onNavigate, userName = '' }: HomePageProps) {
   const [activeTab, setActiveTab] = useState<TabType>('upcoming');
   const [myEvents, setMyEvents] = useState<Event[]>([]);
   const [invites, setInvites] = useState<InviteEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     loadData();
@@ -34,13 +33,11 @@ export default function HomePage({ onViewEvent, onNavigate }: HomePageProps) {
       setIsLoading(true);
       
       // Carregar dados em paralelo
-      const [profile, events, invitesData] = await Promise.all([
-        api.getProfile(),
+      const [events, invitesData] = await Promise.all([
         eventsService.getMyEvents(),
         eventsService.getMyInvites()
       ]);
 
-      setUserName(profile.name);
       setMyEvents(events);
       setInvites(invitesData as InviteEvent[]);
     } catch (err) {
